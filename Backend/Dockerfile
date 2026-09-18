@@ -22,11 +22,11 @@ COPY . .
 # Install PHP dependencies without dev packages and scripts
 RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
-# Set permissions for Laravel storage & cache
-RUN chmod -R 777 storage bootstrap/cache
+# Set permissions for Laravel storage, cache, and start script
+RUN chmod -R 777 storage bootstrap/cache && chmod +x /app/start.sh
 
 # Expose Render default port
 EXPOSE 10000
 
-# Start Laravel Server, clear cache, run package discovery & migrations at container startup
-CMD php artisan config:clear && php artisan route:clear && php artisan package:discover --ansi && (php artisan migrate --force || true) && (php artisan db:seed --force || true) && php artisan serve --host=0.0.0.0 --port=10000
+# Start Laravel Server via start.sh
+CMD ["/bin/sh", "/app/start.sh"]
