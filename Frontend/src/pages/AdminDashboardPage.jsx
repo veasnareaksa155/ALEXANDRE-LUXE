@@ -279,32 +279,7 @@ const AdminDashboardPage = ({
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
   const [orders, setOrders] = useState([]);
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "SuperAdmin Alexandre",
-      email: "admin@alexandreluxe.com",
-      role: "admin",
-      tier: "SUPERADMIN",
-      created_at: "2024-01-01",
-    },
-    {
-      id: 2,
-      name: "Jean-Luc Picard",
-      email: "picard@luxe.fr",
-      role: "user",
-      tier: "BLACK DIAMOND VIP",
-      created_at: "2025-03-12",
-    },
-    {
-      id: 3,
-      name: "Sophie Marceau",
-      email: "sophie@parisluxe.com",
-      role: "user",
-      tier: "GOLD VIP",
-      created_at: "2025-05-20",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Search Filter in Admin Table
@@ -325,55 +300,72 @@ const AdminDashboardPage = ({
   const [editingUser, setEditingUser] = useState(null);
   const [userForm] = Form.useForm();
 
-  // Promotions State & Modal
-  const [promotions, setPromotions] = useState([
-    {
-      id: 1,
-      code: "ALEXANDRE20",
-      discount: "20% OFF",
-      title: "HAUTE COUTURE AUTUMN '26",
-      subtitle: "Exclusive VIP pass for all ready-to-wear luxury collections.",
-      bg_image:
-        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
-      badge: "LIMITED VIP PASS",
-      type: "percentage",
-      value: 20,
-      status: "active",
-      usage_count: 142,
-      expires: "DEC 31, 2026",
-    },
-    {
-      id: 2,
-      code: "BLACKDIAMOND",
-      discount: "$50 VOUCHER",
-      title: "BLACK DIAMOND NIGHT",
-      subtitle: "Applicable on premium leather goods and bespoke timepieces.",
-      bg_image:
-        "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800&auto=format&fit=crop",
-      badge: "EXECUTIVE MEMBER",
-      type: "fixed",
-      value: 50,
-      status: "active",
-      usage_count: 89,
-      expires: "NOV 15, 2026",
-    },
-    {
-      id: 3,
-      code: "PARISVIP",
-      discount: "FREE SHIPPING",
-      title: "PARIS ATELIER EXPRESS",
-      subtitle:
-        "Complimentary global courier dispatch straight from Paris atelier.",
-      bg_image:
-        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop",
-      badge: "GLOBAL FREIGHT",
-      type: "shipping",
-      value: 0,
-      status: "active",
-      usage_count: 310,
-      expires: "PERPETUAL",
-    },
-  ]);
+  // Promotions State & Modal (Persisted in localStorage)
+  const [promotions, setPromotions] = useState(() => {
+    try {
+      const saved = localStorage.getItem("alexandre_luxe_promotions");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      {
+        id: 1,
+        code: "ALEXANDRE20",
+        discount: "20% OFF",
+        title: "HAUTE COUTURE AUTUMN '26",
+        subtitle: "Exclusive VIP pass for all ready-to-wear luxury collections.",
+        bg_image:
+          "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
+        badge: "LIMITED VIP PASS",
+        type: "percentage",
+        value: 20,
+        status: "active",
+        usage_count: 142,
+        expires: "DEC 31, 2026",
+      },
+      {
+        id: 2,
+        code: "BLACKDIAMOND",
+        discount: "$50 VOUCHER",
+        title: "BLACK DIAMOND NIGHT",
+        subtitle: "Applicable on premium leather goods and bespoke timepieces.",
+        bg_image:
+          "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800&auto=format&fit=crop",
+        badge: "EXECUTIVE MEMBER",
+        type: "fixed",
+        value: 50,
+        status: "active",
+        usage_count: 89,
+        expires: "NOV 15, 2026",
+      },
+      {
+        id: 3,
+        code: "PARISVIP",
+        discount: "FREE SHIPPING",
+        title: "PARIS ATELIER EXPRESS",
+        subtitle:
+          "Complimentary global courier dispatch straight from Paris atelier.",
+        bg_image:
+          "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop",
+        badge: "GLOBAL FREIGHT",
+        type: "shipping",
+        value: 0,
+        status: "active",
+        usage_count: 310,
+        expires: "PERPETUAL",
+      },
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("alexandre_luxe_promotions", JSON.stringify(promotions));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [promotions]);
+
   const [promoModalOpen, setPromoModalOpen] = useState(false);
   const [promoForm] = Form.useForm();
 
@@ -651,14 +643,15 @@ const AdminDashboardPage = ({
     try {
       await deleteUser(id);
     } catch (e) {
-      console.warn(e);
+      console.warn("User delete error:", e);
     }
     setUsers((prev) => prev.filter((u) => u.id !== id));
     notification.success({
       message: "USER REMOVED",
-      description: `User #${id} deleted from system.`,
+      description: `User #${id} removed from system database.`,
       placement: "bottomRight",
     });
+    loadAdminData();
   };
 
   // Promo Code Handlers
