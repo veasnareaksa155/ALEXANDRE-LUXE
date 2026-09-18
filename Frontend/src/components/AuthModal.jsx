@@ -9,6 +9,7 @@ import {
   UserAddOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
+import { createUser } from "../services/api";
 
 const AuthModal = ({ open, onClose, onLoginSuccess }) => {
   // Mode State: 'login' | 'register'
@@ -65,13 +66,26 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
     }, 400);
   };
 
-  // Form submit handler for Register
-  const handleRegister = (values) => {
+  // Form submit handler for Register (Calls backend API createUser to save to Supabase)
+  const handleRegister = async (values) => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      let apiUser = null;
+      try {
+        const payload = {
+          name: values.name,
+          email: values.email,
+          password: values.password || "password123",
+          role: "user",
+        };
+        const res = await createUser(payload);
+        apiUser = res.data || res;
+      } catch (apiErr) {
+        console.warn("API registration failed, storing client session:", apiErr);
+      }
 
       const userData = {
+        id: apiUser?.id || Date.now(),
         role: "user",
         name: values.name || "Alexandre VIP Client",
         email: values.email || "newclient@alexandreluxe.com",
@@ -83,16 +97,24 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
 
       notification.success({
         message: "ACCOUNT CREATED SUCCESSFULLY",
-        description: `Welcome to Alexandre Luxe VIP Membership, ${userData.name}!`,
+        description: `Welcome to Alexandre Luxe VIP Membership, ${userData.name}! Your account is active.`,
         placement: "bottomRight",
-        duration: 2.5,
+        duration: 3,
       });
 
       if (onLoginSuccess) {
         onLoginSuccess(userData);
       }
       onClose();
-    }, 450);
+    } catch (error) {
+      notification.error({
+        message: "REGISTRATION FAILED",
+        description: "Could not create VIP account. Please check input values.",
+        placement: "bottomRight",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

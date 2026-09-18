@@ -314,7 +314,8 @@ const AdminDashboardPage = ({
         code: "ALEXANDRE20",
         discount: "20% OFF",
         title: "HAUTE COUTURE AUTUMN '26",
-        subtitle: "Exclusive VIP pass for all ready-to-wear luxury collections.",
+        subtitle:
+          "Exclusive VIP pass for all ready-to-wear luxury collections.",
         bg_image:
           "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
         badge: "LIMITED VIP PASS",
@@ -360,7 +361,10 @@ const AdminDashboardPage = ({
 
   useEffect(() => {
     try {
-      localStorage.setItem("alexandre_luxe_promotions", JSON.stringify(promotions));
+      localStorage.setItem(
+        "alexandre_luxe_promotions",
+        JSON.stringify(promotions),
+      );
     } catch (e) {
       console.error(e);
     }
