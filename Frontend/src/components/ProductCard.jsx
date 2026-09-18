@@ -1,0 +1,162 @@
+import React from "react";
+import {
+  EyeOutlined,
+  ShoppingCartOutlined,
+  HeartOutlined,
+  HeartFilled,
+} from "@ant-design/icons";
+
+const ProductCard = ({
+  product,
+  onQuickView,
+  onAddToCart,
+  isWishlisted,
+  onToggleWishlist,
+}) => {
+  const discountPercent = product.original_price
+    ? Math.round(
+        ((product.original_price - product.price) / product.original_price) *
+          100,
+      )
+    : 0;
+
+  return (
+    <div className="group bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+      {/* Image Container */}
+      <div
+        className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 cursor-pointer"
+        onClick={() => onQuickView(product)}
+      >
+        <img
+          src={product.image_url}
+          alt={product.name}
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+          loading="lazy"
+        />
+
+        {/* Overlay Dark Tint on Hover */}
+        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+        {/* Status Badges */}
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1 z-10 pointer-events-none">
+          {product.is_new && (
+            <span className="bg-black text-white text-[10px] sm:text-xs font-extrabold uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xs tracking-wider shadow">
+              NEW
+            </span>
+          )}
+          {product.is_featured && (
+            <span className="bg-neutral-900 text-white text-[10px] sm:text-xs font-extrabold uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xs tracking-wider shadow">
+              HOT
+            </span>
+          )}
+          {discountPercent > 0 && (
+            <span className="bg-red-600 text-white text-[10px] sm:text-xs font-extrabold uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xs tracking-wider shadow">
+              -{discountPercent}%
+            </span>
+          )}
+        </div>
+
+        {/* Top Right Action Icons Column (Wishlist, Quick View, Add to Bag) */}
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 flex flex-col gap-1.5">
+          {/* Wishlist Heart Button (Always Visible) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleWishlist(product);
+            }}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 hover:bg-white text-black transition-all duration-200"
+            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+          >
+            {isWishlisted ? (
+              <HeartFilled
+                style={{ color: "#ff4d4f" }}
+                className="text-xs sm:text-sm"
+              />
+            ) : (
+              <HeartOutlined className="text-xs sm:text-sm" />
+            )}
+          </button>
+
+          {/* Quick View Icon Button (Appears under Wishlist on Hover) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 backdrop-blur-sm text-neutral-800 hover:bg-black hover:text-white flex items-center justify-center shadow-md transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0"
+            title="Quick View"
+          >
+            <EyeOutlined className="text-xs sm:text-sm" />
+          </button>
+
+          {/* Add to Bag Icon Button (Appears under Quick View on Hover) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(product);
+            }}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 backdrop-blur-sm text-neutral-800 hover:bg-black hover:text-white flex items-center justify-center shadow-md transition-all duration-300 delay-75 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0"
+            title="Add to Bag"
+          >
+            <ShoppingCartOutlined className="text-xs sm:text-sm" />
+          </button>
+        </div>
+      </div>
+
+      {/* Product Details Container */}
+      <div className="p-3 sm:p-4 flex flex-col flex-grow justify-between bg-white">
+        <div>
+          {/* Category */}
+          <span className="text-[10px] sm:text-xs font-semibold text-neutral-400 uppercase tracking-widest block mb-1">
+            {product.category?.name || "ALEXANDRE LUXE"}
+          </span>
+
+          {/* Product Name */}
+          <h3
+            onClick={() => onQuickView(product)}
+            className="text-xs sm:text-sm font-bold text-black hover:text-neutral-600 cursor-pointer line-clamp-1 mb-1.5 sm:mb-2 font-serif transition-colors"
+          >
+            {product.name}
+          </h3>
+
+          {/* Sizes preview */}
+          {product.sizes && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {product.sizes.map((sz) => (
+                <span
+                  key={sz}
+                  className="text-[9px] sm:text-[10px] font-mono font-semibold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200"
+                >
+                  {sz}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Price & Add Button */}
+        <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t border-neutral-100 mt-1">
+          <div className="flex items-baseline space-x-1.5 sm:space-x-2">
+            <span className="text-sm sm:text-base font-black text-black font-sans">
+              ${Number(product.price).toFixed(2)}
+            </span>
+            {product.original_price && (
+              <span className="text-[10px] sm:text-xs text-neutral-400 line-through font-sans">
+                ${Number(product.original_price).toFixed(2)}
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={() => onAddToCart(product)}
+            className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-black hover:text-neutral-500 flex items-center gap-1 transition-colors"
+          >
+            <span>+ ADD</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProductCard;

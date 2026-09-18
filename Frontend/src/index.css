@@ -1,0 +1,241 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap");
+@import "tailwindcss";
+
+:root {
+  font-family:
+    "Plus Jakarta Sans",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #111111;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.font-serif {
+  font-family: "Cinzel", Georgia, serif;
+}
+
+/* Antd Carousel custom overrides */
+.hero-carousel .slick-slide > div {
+  outline: none;
+  height: 100%;
+}
+
+.hero-carousel .slick-dots {
+  bottom: 25px !important;
+}
+
+.hero-carousel .slick-dots li button {
+  background: #ffffff !important;
+  opacity: 0.4 !important;
+  height: 4px !important;
+  border-radius: 2px !important;
+}
+
+.hero-carousel .slick-dots li.slick-active button {
+  opacity: 1 !important;
+  width: 24px !important;
+  background: #ffffff !important;
+}
+
+/* Perfect Icon Centering across all circular buttons & badges */
+.anticon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+.anticon svg {
+  display: block !important;
+  margin: auto !important;
+}
+
+.ant-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+/* Footer Newsletter Input & Button Redesign */
+.footer-newsletter-input {
+  background-color: #141414 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+}
+
+.footer-newsletter-input input {
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+
+.footer-newsletter-input input::placeholder {
+  color: #737373 !important;
+}
+
+.footer-newsletter-input:hover,
+.footer-newsletter-input:focus,
+.footer-newsletter-input-focused {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15) !important;
+}
+
+.footer-newsletter-btn {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+  border-radius: 6px !important;
+  transition: all 0.3s ease !important;
+}
+
+.footer-newsletter-btn:hover {
+  background-color: #e5e5e5 !important;
+  color: #000000 !important;
+  border-color: #e5e5e5 !important;
+  transform: scale(1.05);
+}
+
+.footer-newsletter-btn .anticon {
+  color: #000000 !important;
+}
+
+/* Scroll Reveal Animations for luxury experience */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(35px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #000000;
+}
+
+/* Ant Design Modal Close Button sleek styling */
+.ant-modal-close {
+  top: 12px !important;
+  right: 12px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  outline: none !important;
+  background: #f4f4f5 !important;
+  color: #000000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  z-index: 50 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ant-modal-close:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+.ant-modal-close .ant-modal-close-x {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.ant-modal-close:hover .anticon {
+  color: #ffffff !important;
+}
+
+@media (max-width: 639px) {
+  .ant-modal-close {
+    top: 8px !important;
+    right: 8px !important;
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  /* Compact Ant Design Notification Toasts on Mobile */
+  .ant-notification {
+    max-width: calc(100vw - 24px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    margin: 0 auto !important;
+  }
+
+  .ant-notification-notice {
+    padding: 10px 14px !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+    max-width: 100% !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .ant-notification-notice-icon {
+    font-size: 16px !important;
+    margin-top: 2px !important;
+  }
+
+  .ant-notification-notice-message {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    margin-bottom: 2px !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .ant-notification-notice-description {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    color: #555555 !important;
+  }
+
+  .ant-notification-notice-close {
+    top: 10px !important;
+    right: 10px !important;
+    font-size: 12px !important;
+  }
+}
