@@ -70,28 +70,20 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
   const handleRegister = async (values) => {
     setLoading(true);
     try {
-      let apiUser = null;
-      try {
-        const payload = {
-          name: values.name,
-          email: values.email,
-          password: values.password || "password123",
-          role: "user",
-        };
-        const res = await createUser(payload);
-        apiUser = res.data || res;
-      } catch (apiErr) {
-        console.warn(
-          "API registration failed, storing client session:",
-          apiErr,
-        );
-      }
+      const payload = {
+        name: values.name,
+        email: values.email,
+        password: values.password || "password123",
+        role: "user",
+      };
+      const res = await createUser(payload);
+      const apiUser = res.data || res;
 
       const userData = {
         id: apiUser?.id || Date.now(),
         role: "user",
-        name: values.name || "Alexandre VIP Client",
-        email: values.email || "newclient@alexandreluxe.com",
+        name: apiUser?.name || values.name,
+        email: apiUser?.email || values.email,
         tier: "BLACK DIAMOND VIP",
         memberSince: "2026",
         phone: "+33 1 42 68 55 00",
@@ -100,7 +92,7 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
 
       notification.success({
         message: "ACCOUNT CREATED SUCCESSFULLY",
-        description: `Welcome to Alexandre Luxe VIP Membership, ${userData.name}! Your account is active.`,
+        description: `Welcome to Alexandre Luxe VIP Membership, ${userData.name}! Your account is active in database.`,
         placement: "bottomRight",
         duration: 3,
       });
@@ -110,10 +102,19 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
       }
       onClose();
     } catch (error) {
+      console.error("Registration failed:", error);
+      const errorMsg =
+        error.response?.data?.errors?.email?.[0] ||
+        error.response?.data?.errors?.password?.[0] ||
+        error.response?.data?.errors?.name?.[0] ||
+        error.response?.data?.message ||
+        "Could not create VIP account. Please try a different email or check inputs.";
+
       notification.error({
         message: "REGISTRATION FAILED",
-        description: "Could not create VIP account. Please check input values.",
+        description: errorMsg,
         placement: "bottomRight",
+        duration: 4,
       });
     } finally {
       setLoading(false);

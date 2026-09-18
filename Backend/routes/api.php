@@ -42,5 +42,3 @@ Route::delete('/users/{id}', [UserController::class, 'destroy']);
 Route::post('/bakong/generate-khqr', [BakongPaymentController::class, 'generateKhqr']);
 Route::post('/bakong/check-status', [BakongPaymentController::class, 'checkTransactionStatus']);
 Route::post('/bakong/callback', [BakongPaymentController::class, 'handleCallback']);
-
-
