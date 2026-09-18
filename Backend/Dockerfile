@@ -1,4 +1,4 @@
-FROM php:8.2-cli-alpine
+FROM php:8.3-cli-alpine
 
 # Install system dependencies & PostgreSQL/MySQL drivers
 RUN apk add --no-cache \
@@ -19,8 +19,8 @@ WORKDIR /app
 # Copy Backend codebase
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install PHP dependencies without dev packages and scripts
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
 
 # Set permissions for Laravel storage & cache
 RUN chmod -R 777 storage bootstrap/cache
@@ -28,6 +28,5 @@ RUN chmod -R 777 storage bootstrap/cache
 # Expose Render default port
 EXPOSE 10000
 
-# Start Laravel Server & Run Migrations on container launch
-CMD php artisan config:cache && php artisan route:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
-
+# Start Laravel Server, clear cache, run package discovery & migrations at container startup
+CMD php artisan package:discover --ansi && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
