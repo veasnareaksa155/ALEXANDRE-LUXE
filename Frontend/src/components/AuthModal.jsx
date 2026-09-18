@@ -81,7 +81,10 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
         const res = await createUser(payload);
         apiUser = res.data || res;
       } catch (apiErr) {
-        console.warn("API registration failed, storing client session:", apiErr);
+        console.warn(
+          "API registration failed, storing client session:",
+          apiErr,
+        );
       }
 
       const userData = {
