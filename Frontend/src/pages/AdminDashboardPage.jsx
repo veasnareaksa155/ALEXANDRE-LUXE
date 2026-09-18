@@ -419,7 +419,7 @@ const AdminDashboardPage = ({
   useEffect(() => {
     window.scrollTo(0, 0);
     loadAdminData();
-  }, []);
+  }, [activeTab]);
 
   // Sync initial props
   useEffect(() => {
@@ -581,20 +581,16 @@ const AdminDashboardPage = ({
     try {
       if (editingUser) {
         await updateUser(editingUser.id, values);
-        setUsers((prev) =>
-          prev.map((u) => (u.id === editingUser.id ? { ...u, ...values } : u)),
-        );
         notification.success({
           message: "USER UPDATED",
-          description: `User #${editingUser.id} (${values.name}) updated!`,
+          description: `User #${editingUser.id} (${values.name}) updated in database!`,
           placement: "bottomRight",
         });
       } else {
-        const newUser = await createUser(values);
-        setUsers((prev) => [
-          ...prev,
-          newUser.data || { id: Date.now(), ...values },
-        ]);
+        await createUser({
+          ...values,
+          password: values.password || "password123",
+        });
         notification.success({
           message: "USER REGISTERED",
           description: `New user account created for ${values.name}!`,
@@ -604,30 +600,19 @@ const AdminDashboardPage = ({
       setUserModalOpen(false);
       setEditingUser(null);
       userForm.resetFields();
+      await loadAdminData();
     } catch (err) {
-      // Fallback local update if backend fails
-      if (editingUser) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === editingUser.id ? { ...u, ...values } : u)),
-        );
-      } else {
-        setUsers((prev) => [
-          ...prev,
-          {
-            id: Date.now(),
-            ...values,
-            created_at: new Date().toISOString().split("T")[0],
-          },
-        ]);
-      }
-      notification.success({
-        message: "USER SAVED",
-        description: `User ${values.name} saved successfully!`,
+      console.error("User save error:", err);
+      const msg =
+        err.response?.data?.errors?.email?.[0] ||
+        err.response?.data?.errors?.password?.[0] ||
+        err.response?.data?.message ||
+        "Failed to save user. Check inputs or try a different email.";
+      notification.error({
+        message: "USER ACTION FAILED",
+        description: msg,
         placement: "bottomRight",
       });
-      setUserModalOpen(false);
-      setEditingUser(null);
-      userForm.resetFields();
     } finally {
       setLoading(false);
     }
