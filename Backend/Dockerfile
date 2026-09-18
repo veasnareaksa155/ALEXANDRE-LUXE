@@ -29,4 +29,4 @@ RUN chmod -R 777 storage bootstrap/cache
 EXPOSE 10000
 
 # Start Laravel Server, clear cache, run package discovery & migrations at container startup
-CMD php artisan package:discover --ansi && php artisan config:clear && (php artisan migrate --force || true) && php artisan serve --host=0.0.0.0 --port=10000
+CMD php artisan package:discover --ansi && php artisan config:clear && (php artisan migrate --force || true) && (php artisan db:seed --force || true) && php artisan serve --host=0.0.0.0 --port=10000
