@@ -19,3 +19,4 @@ php artisan package:discover --ansi
 PORT_TO_USE="${PORT:-10000}"
 echo "Starting Alexandre Luxe Laravel Server on 0.0.0.0:${PORT_TO_USE}..."
 exec php artisan serve --host=0.0.0.0 --port="${PORT_TO_USE}"
+
