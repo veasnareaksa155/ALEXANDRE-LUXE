@@ -34,8 +34,8 @@ const ProductCard = ({
           loading="lazy"
         />
 
-        {/* Overlay Dark Tint on Hover */}
-        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        {/* Subtle Backdrop Blur & Soft Dark Tint Overlay on Hover */}
+        <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-[5]" />
 
         {/* Status Badges */}
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1 z-10 pointer-events-none">
