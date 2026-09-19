@@ -42,7 +42,8 @@ const ProductDetailModal = ({
   const galleryImages = React.useMemo(() => {
     if (!product) return [];
     if (product.images && Array.isArray(product.images)) return product.images;
-    if (product.gallery && Array.isArray(product.gallery)) return [product.image_url, ...product.gallery];
+    if (product.gallery && Array.isArray(product.gallery))
+      return [product.image_url, ...product.gallery];
     return [product.image_url];
   }, [product]);
 
@@ -61,11 +62,69 @@ const ProductDetailModal = ({
 
   if (!product) return null;
 
+  // Helper function to map colors to luxury apparel variant photos
+  const getColorImageUrl = (colorName, categoryName, defaultImg) => {
+    if (!colorName) return defaultImg;
+    const col = colorName.toLowerCase().trim();
+    const cat = (categoryName || "").toLowerCase().trim();
+
+    if (product?.color_images && product.color_images[colorName]) {
+      return product.color_images[colorName];
+    }
+
+    if (col.includes("white")) {
+      if (cat.includes("t-shirt") || cat.includes("tee")) {
+        return "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80";
+      }
+      if (cat.includes("shirt")) {
+        return "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80";
+      }
+      if (cat.includes("shoe") || cat.includes("footwear")) {
+        return "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80";
+      }
+      return "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80";
+    }
+
+    if (col.includes("black")) {
+      if (cat.includes("t-shirt") || cat.includes("tee")) {
+        return "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80";
+      }
+      if (cat.includes("shirt")) {
+        return "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80";
+      }
+      if (cat.includes("shoe")) {
+        return "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80";
+      }
+      return "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80";
+    }
+
+    if (col.includes("navy") || col.includes("blue")) {
+      return "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80";
+    }
+
+    if (col.includes("charcoal") || col.includes("gray") || col.includes("grey")) {
+      return "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?auto=format&fit=crop&w=800&q=80";
+    }
+
+    if (col.includes("burgundy") || col.includes("red")) {
+      return "https://images.unsplash.com/photo-1603252109303-2751441dd157?auto=format&fit=crop&w=800&q=80";
+    }
+
+    if (col.includes("brown") || col.includes("tan") || col.includes("beige")) {
+      return "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80";
+    }
+
+    return defaultImg;
+  };
+
   const handleColorSelect = (col, idx) => {
     setSelectedColor(col);
-    if (galleryImages[idx]) {
-      setActiveImage(galleryImages[idx]);
-    }
+    const targetImage =
+      product?.color_images?.[col] ||
+      (galleryImages[idx] && galleryImages[idx] !== product?.image_url
+        ? galleryImages[idx]
+        : getColorImageUrl(col, product?.category?.name, product?.image_url));
+    setActiveImage(targetImage);
   };
 
   const handleAdd = () => {
@@ -107,10 +166,16 @@ const ProductDetailModal = ({
                   key={idx}
                   onClick={() => setActiveImage(img)}
                   className={`w-12 h-14 rounded overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
-                    activeImage === img ? "border-black scale-105 shadow-sm" : "border-neutral-200 opacity-70 hover:opacity-100"
+                    activeImage === img
+                      ? "border-black scale-105 shadow-sm"
+                      : "border-neutral-200 opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={img}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
