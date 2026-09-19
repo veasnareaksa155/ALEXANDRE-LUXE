@@ -374,16 +374,34 @@ function App() {
     } else {
       return (
         <ConfigProvider theme={adminDarkTheme}>
-          <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-4">
-            <AdminAuthModal
-              open={true}
-              onClose={() => setActivePage("home")}
-              onLoginSuccess={(userData) => {
-                setCurrentUser(userData);
-                setUserSessionRole("admin");
-                setActivePage("admin");
-              }}
-            />
+          <div className="relative min-h-screen bg-black text-white flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+            {/* Ambient Dark Luxury Background Layer */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black opacity-95" />
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center mix-blend-overlay opacity-15 filter blur-xs" />
+            
+            {/* Header Brand Bar */}
+            <div className="absolute top-5 left-6 right-6 flex items-center justify-between z-10 pointer-events-none">
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-serif font-black tracking-[0.25em] uppercase text-white">ALEXANDRE LUXE</span>
+                <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-extrabold tracking-wider">SUPERADMIN</span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-black/60 px-3 py-1 rounded-full border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                SUPABASE PG ONLINE
+              </span>
+            </div>
+
+            <div className="relative z-20 w-full max-w-md">
+              <AdminAuthModal
+                open={true}
+                onClose={() => setActivePage("home")}
+                onLoginSuccess={(userData) => {
+                  setCurrentUser(userData);
+                  setUserSessionRole("admin");
+                  setActivePage("admin");
+                }}
+              />
+            </div>
           </div>
         </ConfigProvider>
       );

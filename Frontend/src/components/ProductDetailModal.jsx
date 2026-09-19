@@ -258,7 +258,11 @@ const ProductDetailModal = ({
     ) {
       product.gallery.forEach((gUrl, idx) => {
         if (!items.some((it) => it.url === gUrl)) {
-          items.push({ id: `gal-${idx}`, label: `ANGLE ${idx + 2}`, url: gUrl });
+          items.push({
+            id: `gal-${idx}`,
+            label: `ANGLE ${idx + 2}`,
+            url: gUrl,
+          });
         }
       });
     }
@@ -345,7 +349,7 @@ const ProductDetailModal = ({
     const targetImage = getColorImageUrl(
       col,
       product?.category?.name,
-      product?.image_url
+      product?.image_url,
     );
     setActiveImage(targetImage);
   };
@@ -357,7 +361,7 @@ const ProductDetailModal = ({
 
   // Find active image item in angle gallery
   const activeIndex = productAngleGallery.findIndex(
-    (item) => item.url === activeImage
+    (item) => item.url === activeImage,
   );
   const currentAngleItem =
     productAngleGallery[activeIndex >= 0 ? activeIndex : 0];
@@ -393,7 +397,9 @@ const ProductDetailModal = ({
               src={activeImage || product.image_url}
               alt={product.name}
               className={`w-full h-full object-cover object-center transition-all duration-500 ease-out ${
-                currentAngleItem?.isZoom ? "scale-[1.65] origin-center cursor-zoom-out" : "scale-100"
+                currentAngleItem?.isZoom
+                  ? "scale-[1.65] origin-center cursor-zoom-out"
+                  : "scale-100"
               }`}
             />
 
