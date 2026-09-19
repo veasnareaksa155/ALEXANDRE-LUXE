@@ -805,15 +805,21 @@ const AdminDashboardPage = ({
       title: "TAGS",
       key: "badges",
       render: (_, record) => (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5 items-start">
+          {record.is_new && (
+            <span className="text-[9px] font-mono font-black uppercase px-2.5 py-0.5 bg-black text-white rounded-md tracking-widest inline-flex items-center gap-1 shadow-xs border border-neutral-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              NEW COLLECTION
+            </span>
+          )}
           {record.is_featured && (
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-emerald-600 text-white rounded tracking-widest inline-block text-center shadow-xs">
+            <span className="text-[9px] font-mono font-black uppercase px-2.5 py-0.5 bg-amber-500/10 text-amber-700 border border-amber-300 rounded-md tracking-widest inline-flex items-center gap-1 shadow-xs">
               🔥 HOT DROP
             </span>
           )}
-          {record.is_new && (
-            <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-indigo-100 text-indigo-800 border border-indigo-200 rounded tracking-widest inline-block text-center">
-              ✨ NEW
+          {!record.is_new && !record.is_featured && (
+            <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 text-neutral-400 bg-neutral-100 rounded border border-neutral-200">
+              STANDARD
             </span>
           )}
         </div>

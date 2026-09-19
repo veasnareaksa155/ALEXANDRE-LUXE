@@ -56,15 +56,29 @@ const ProductCard = ({
           )}
         </div>
 
-        {/* Top Right Action Icons Column (Wishlist, Quick View, Add to Bag) */}
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 flex flex-col gap-1.5">
-          {/* Wishlist Heart Button (Always Visible) */}
+        {/* Centered Quick View Button Overlay on Hover */}
+        <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            className="pointer-events-auto bg-black/85 hover:bg-black text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs font-extrabold uppercase tracking-widest flex items-center gap-2 shadow-2xl transform scale-90 group-hover:scale-100 transition-all duration-300 border border-white/20 backdrop-blur-md cursor-pointer"
+            title="Quick View"
+          >
+            <EyeOutlined className="text-sm" />
+            <span>QUICK VIEW</span>
+          </button>
+        </div>
+
+        {/* Top Right Action Icon (Wishlist Heart Only) */}
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggleWishlist(product);
             }}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 hover:bg-white text-black transition-all duration-200"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 hover:bg-white text-black transition-all duration-200 cursor-pointer"
             title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
           >
             {isWishlisted ? (
@@ -75,30 +89,6 @@ const ProductCard = ({
             ) : (
               <HeartOutlined className="text-xs sm:text-sm" />
             )}
-          </button>
-
-          {/* Quick View Icon Button (Appears under Wishlist on Hover) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickView(product);
-            }}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 backdrop-blur-sm text-neutral-800 hover:bg-black hover:text-white flex items-center justify-center shadow-md transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0"
-            title="Quick View"
-          >
-            <EyeOutlined className="text-xs sm:text-sm" />
-          </button>
-
-          {/* Add to Bag Icon Button (Appears under Quick View on Hover) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(product);
-            }}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 backdrop-blur-sm text-neutral-800 hover:bg-black hover:text-white flex items-center justify-center shadow-md transition-all duration-300 delay-75 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0"
-            title="Add to Bag"
-          >
-            <ShoppingCartOutlined className="text-xs sm:text-sm" />
           </button>
         </div>
       </div>
@@ -149,8 +139,9 @@ const ProductCard = ({
 
           <button
             onClick={() => onAddToCart(product)}
-            className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-black hover:text-neutral-500 flex items-center gap-1 transition-colors"
+            className="bg-black hover:bg-neutral-800 text-white text-[10px] sm:text-xs font-extrabold uppercase tracking-wider px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-md flex items-center gap-1.5 shadow-sm transition-all transform hover:scale-105 cursor-pointer"
           >
+            <ShoppingCartOutlined className="text-xs sm:text-sm" />
             <span>+ ADD</span>
           </button>
         </div>
