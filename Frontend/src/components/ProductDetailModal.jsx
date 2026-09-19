@@ -102,7 +102,11 @@ const ProductDetailModal = ({
       return "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80";
     }
 
-    if (col.includes("charcoal") || col.includes("gray") || col.includes("grey")) {
+    if (
+      col.includes("charcoal") ||
+      col.includes("gray") ||
+      col.includes("grey")
+    ) {
       return "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?auto=format&fit=crop&w=800&q=80";
     }
 
@@ -132,54 +136,89 @@ const ProductDetailModal = ({
     onClose();
   };
 
+  const modelImage = React.useMemo(() => {
+    if (product?.model_image_url) return product.model_image_url;
+    const cat = (product?.category?.name || "").toLowerCase();
+    const name = (product?.name || "").toLowerCase();
+
+    if (cat.includes("t-shirt") || cat.includes("tee") || name.includes("tee") || name.includes("t-shirt")) {
+      return "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80";
+    }
+    if (cat.includes("shirt") || name.includes("shirt")) {
+      return "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80";
+    }
+    if (cat.includes("shoe") || cat.includes("footwear") || name.includes("shoe") || name.includes("sneaker")) {
+      return "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80";
+    }
+    if (cat.includes("bag") || name.includes("bag") || name.includes("leather")) {
+      return "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80";
+    }
+    return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80";
+  }, [product]);
+
+  const isShowingModel = activeImage === modelImage;
+
   return (
     <Modal
       open={open}
       onCancel={onClose}
       footer={null}
-      width={800}
+      width={840}
       centered
       closeIcon={<CloseOutlined className="text-xs sm:text-sm md:text-base" />}
       className="product-detail-modal"
     >
       <div className="flex flex-col md:flex-row gap-4 sm:gap-6 items-stretch pt-0.5">
-        {/* Left: Product Image Showcase & Gallery Thumbnails */}
+        {/* Left: Product & Model Lookbook Showcase */}
         <div className="w-full md:w-1/2 flex flex-col gap-2 flex-shrink-0">
-          <div className="relative aspect-[3/4] w-full bg-neutral-100 rounded-lg overflow-hidden border border-neutral-200 shadow-sm">
+          <div className="relative aspect-[3/4] w-full bg-neutral-100 rounded-xl overflow-hidden border border-neutral-200 shadow-md group">
             <img
               src={activeImage || product.image_url}
               alt={product.name}
-              className="w-full h-full object-cover object-center transition-all duration-300"
+              className="w-full h-full object-cover object-center transition-all duration-500 ease-out"
             />
-            {product.is_new && (
-              <span className="absolute top-2.5 left-2.5 bg-black text-white text-[9px] sm:text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-xs tracking-wider shadow">
-                NEW COLLECTION
-              </span>
-            )}
+
+            {/* Badges */}
+            <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+              {product.is_new && !isShowingModel && (
+                <span className="bg-black text-white text-[9px] sm:text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md">
+                  NEW COLLECTION
+                </span>
+              )}
+              {isShowingModel && (
+                <span className="bg-amber-500 text-black text-[9px] sm:text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md flex items-center gap-1">
+                  👤 MODEL LOOKBOOK • ON-BODY
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Gallery Thumbnails (if multiple images exist) */}
-          {galleryImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto py-1">
-              {galleryImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(img)}
-                  className={`w-12 h-14 rounded overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
-                    activeImage === img
-                      ? "border-black scale-105 shadow-sm"
-                      : "border-neutral-200 opacity-70 hover:opacity-100"
-                  }`}
-                >
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Model & Flat Lay View Selector Thumbnails */}
+          <div className="flex items-center gap-2 pt-1">
+            {/* View Mode 1: Product Flat Lay */}
+            <button
+              onClick={() => setActiveImage(product.image_url)}
+              className={`flex-1 py-1.5 px-3 rounded-lg border text-[11px] font-mono font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                !isShowingModel
+                  ? "bg-black text-white border-black shadow-xs"
+                  : "bg-white text-neutral-600 border-neutral-200 hover:border-black"
+              }`}
+            >
+              <span>👔 PRODUCT SHOT</span>
+            </button>
+
+            {/* View Mode 2: Model On-Body Lookbook */}
+            <button
+              onClick={() => setActiveImage(modelImage)}
+              className={`flex-1 py-1.5 px-3 rounded-lg border text-[11px] font-mono font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                isShowingModel
+                  ? "bg-amber-500 text-black border-amber-500 shadow-xs"
+                  : "bg-white text-neutral-600 border-neutral-200 hover:border-black"
+              }`}
+            >
+              <span>👤 MODEL FIT</span>
+            </button>
+          </div>
         </div>
 
         {/* Right: Meta & Interactive Options */}
