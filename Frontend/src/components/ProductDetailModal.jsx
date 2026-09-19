@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal } from "antd";
 import {
   ShoppingOutlined,
@@ -38,8 +38,43 @@ const ProductDetailModal = ({
     "black/white": "#171717",
   };
 
-  // Gallery images array (fallback to main image if no gallery)
-  const galleryImages = React.useMemo(() => {
+  // Model photo variant mapping
+  const modelImage = useMemo(() => {
+    if (product?.model_image_url) return product.model_image_url;
+    const cat = (product?.category?.name || "").toLowerCase();
+    const name = (product?.name || "").toLowerCase();
+
+    if (
+      cat.includes("t-shirt") ||
+      cat.includes("tee") ||
+      name.includes("tee") ||
+      name.includes("t-shirt")
+    ) {
+      return "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80";
+    }
+    if (cat.includes("shirt") || name.includes("shirt")) {
+      return "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80";
+    }
+    if (
+      cat.includes("shoe") ||
+      cat.includes("footwear") ||
+      name.includes("shoe") ||
+      name.includes("sneaker")
+    ) {
+      return "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80";
+    }
+    if (
+      cat.includes("bag") ||
+      name.includes("bag") ||
+      name.includes("leather")
+    ) {
+      return "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80";
+    }
+    return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80";
+  }, [product]);
+
+  // Gallery images array
+  const galleryImages = useMemo(() => {
     if (!product) return [];
     if (product.images && Array.isArray(product.images)) return product.images;
     if (product.gallery && Array.isArray(product.gallery))
@@ -135,26 +170,6 @@ const ProductDetailModal = ({
     onAddToCart(product, quantity, selectedSize, selectedColor);
     onClose();
   };
-
-  const modelImage = React.useMemo(() => {
-    if (product?.model_image_url) return product.model_image_url;
-    const cat = (product?.category?.name || "").toLowerCase();
-    const name = (product?.name || "").toLowerCase();
-
-    if (cat.includes("t-shirt") || cat.includes("tee") || name.includes("tee") || name.includes("t-shirt")) {
-      return "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80";
-    }
-    if (cat.includes("shirt") || name.includes("shirt")) {
-      return "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80";
-    }
-    if (cat.includes("shoe") || cat.includes("footwear") || name.includes("shoe") || name.includes("sneaker")) {
-      return "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80";
-    }
-    if (cat.includes("bag") || name.includes("bag") || name.includes("leather")) {
-      return "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80";
-    }
-    return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80";
-  }, [product]);
 
   const isShowingModel = activeImage === modelImage;
 
@@ -345,7 +360,7 @@ const ProductDetailModal = ({
             {/* Native Clean Add to Bag Button */}
             <button
               onClick={handleAdd}
-              className="flex-1 bg-black text-white hover:bg-neutral-800 active:scale-[0.99] font-bold text-xs md:text-xs lg:text-sm tracking-wide uppercase h-8.5 sm:h-9.5 md:h-10.5 rounded-md shadow-sm px-3 sm:px-5 md:px-6 flex items-center justify-center gap-2 transition-all min-w-0"
+              className="flex-1 bg-black text-white hover:bg-neutral-800 active:scale-[0.99] font-bold text-xs md:text-xs lg:text-sm tracking-wide uppercase h-8.5 sm:h-9.5 md:h-10.5 rounded-md shadow-sm px-3 sm:px-5 md:px-6 flex items-center justify-center gap-2 transition-all min-w-0 cursor-pointer"
             >
               <ShoppingOutlined className="text-xs sm:text-sm md:text-base flex-shrink-0" />
               <span className="whitespace-nowrap overflow-hidden text-ellipsis">
@@ -356,7 +371,7 @@ const ProductDetailModal = ({
             {/* Wishlist Toggle Button */}
             <button
               onClick={() => onToggleWishlist(product)}
-              className={`h-8.5 w-8.5 sm:h-9.5 sm:w-9.5 md:h-10.5 md:w-10.5 flex items-center justify-center border rounded-md transition-all flex-shrink-0 ${
+              className={`h-8.5 w-8.5 sm:h-9.5 sm:w-9.5 md:h-10.5 md:w-10.5 flex items-center justify-center border rounded-md transition-all flex-shrink-0 cursor-pointer ${
                 isWishlisted
                   ? "border-red-200 bg-red-50 text-red-500 shadow-sm"
                   : "border-neutral-300 hover:border-black text-neutral-700 bg-white"
