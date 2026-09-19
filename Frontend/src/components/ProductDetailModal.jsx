@@ -40,11 +40,12 @@ const ProductDetailModal = ({
     "black/white": "#171717",
   };
 
-  // Model photo variant mapping
+  // Model photo variant mapping tailored to item category & gender fit
   const modelImage = useMemo(() => {
     if (product?.model_image_url) return product.model_image_url;
     const cat = (product?.category?.name || "").toLowerCase();
     const name = (product?.name || "").toLowerCase();
+    const col = (selectedColor || product?.colors?.[0] || "").toLowerCase();
 
     if (
       cat.includes("t-shirt") ||
@@ -52,10 +53,14 @@ const ProductDetailModal = ({
       name.includes("tee") ||
       name.includes("t-shirt")
     ) {
-      return "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80";
+      return col.includes("white")
+        ? "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80"
+        : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80";
     }
     if (cat.includes("shirt") || name.includes("shirt")) {
-      return "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80";
+      return col.includes("white")
+        ? "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80"
+        : "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80";
     }
     if (
       cat.includes("shoe") ||
@@ -73,152 +78,184 @@ const ProductDetailModal = ({
       return "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80";
     }
     return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80";
-  }, [product]);
+  }, [product, selectedColor]);
 
   // Multi-angle gallery array (Front, Back, Left, Right, Detail, Model)
+  // Guaranteed to stay 100% consistent with the active product type and color scheme
   const productAngleGallery = useMemo(() => {
     if (!product) return [];
     const cat = (product?.category?.name || "").toLowerCase();
     const name = (product?.name || "").toLowerCase();
-    const mainImg = activeImage || product.image_url;
+    const col = (selectedColor || product?.colors?.[0] || "").toLowerCase();
+    const mainImg = product.image_url;
+
+    const isWhite = col.includes("white") || name.includes("white");
+    const isGrey =
+      col.includes("grey") ||
+      col.includes("gray") ||
+      col.includes("charcoal") ||
+      name.includes("charcoal") ||
+      name.includes("grey");
 
     let items = [];
 
+    // --- T-SHIRTS & TEES ---
     if (
       cat.includes("t-shirt") ||
       cat.includes("tee") ||
       name.includes("tee") ||
       name.includes("t-shirt")
     ) {
-      items = [
-        { id: "front", label: "FRONT", url: product.image_url },
-        {
-          id: "back",
-          label: "BACK",
-          url: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "left",
-          label: "LEFT",
-          url: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "right",
-          label: "RIGHT",
-          url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "detail",
-          label: "DETAIL",
-          url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80",
-        },
-        { id: "model", label: "MODEL", url: modelImage },
-      ];
-    } else if (
+      if (isWhite) {
+        items = [
+          { id: "front", label: "FRONT", url: mainImg },
+          {
+            id: "back",
+            label: "BACK",
+            url: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80",
+          },
+          {
+            id: "side",
+            label: "SIDE",
+            url: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+          },
+          { id: "detail", label: "FABRIC DETAIL", url: mainImg, isZoom: true },
+          { id: "model", label: "MODEL FIT", url: modelImage },
+        ];
+      } else if (isGrey) {
+        items = [
+          { id: "front", label: "FRONT", url: mainImg },
+          {
+            id: "back",
+            label: "BACK",
+            url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=800&q=80",
+          },
+          {
+            id: "side",
+            label: "SIDE",
+            url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80",
+          },
+          { id: "detail", label: "FABRIC DETAIL", url: mainImg, isZoom: true },
+          { id: "model", label: "MODEL FIT", url: modelImage },
+        ];
+      } else {
+        // Black Tee Default
+        items = [
+          { id: "front", label: "FRONT", url: mainImg },
+          {
+            id: "back",
+            label: "BACK",
+            url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80",
+          },
+          {
+            id: "side",
+            label: "SIDE",
+            url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=800&q=80",
+          },
+          { id: "detail", label: "FABRIC DETAIL", url: mainImg, isZoom: true },
+          { id: "model", label: "MODEL FIT", url: modelImage },
+        ];
+      }
+    }
+    // --- BUTTON DOWN SHIRTS & SUITS ---
+    else if (
       cat.includes("shirt") ||
       cat.includes("suit") ||
       name.includes("shirt") ||
-      name.includes("suit") ||
-      name.includes("blazer")
+      name.includes("suit")
     ) {
-      items = [
-        { id: "front", label: "FRONT", url: product.image_url },
-        {
-          id: "back",
-          label: "BACK",
-          url: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "left",
-          label: "LEFT",
-          url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "right",
-          label: "RIGHT",
-          url: "https://images.unsplash.com/photo-1603252109303-2751441dd157?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "detail",
-          label: "DETAIL",
-          url: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80",
-        },
-        { id: "model", label: "MODEL", url: modelImage },
-      ];
-    } else if (
+      if (isWhite) {
+        items = [
+          { id: "front", label: "FRONT", url: mainImg },
+          {
+            id: "back",
+            label: "BACK",
+            url: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80",
+          },
+          {
+            id: "side",
+            label: "COLLAR SHOT",
+            url: mainImg,
+            isZoom: true,
+          },
+          { id: "detail", label: "SEAM DETAIL", url: mainImg, isZoom: true },
+          { id: "model", label: "MODEL FIT", url: modelImage },
+        ];
+      } else {
+        items = [
+          { id: "front", label: "FRONT", url: mainImg },
+          {
+            id: "back",
+            label: "BACK",
+            url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80",
+          },
+          {
+            id: "side",
+            label: "SLEEVE SHOT",
+            url: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?auto=format&fit=crop&w=800&q=80",
+          },
+          { id: "detail", label: "WEAVE DETAIL", url: mainImg, isZoom: true },
+          { id: "model", label: "MODEL FIT", url: modelImage },
+        ];
+      }
+    }
+    // --- SHOES & SNEAKERS ---
+    else if (
       cat.includes("shoe") ||
       cat.includes("footwear") ||
       name.includes("shoe") ||
-      name.includes("sneaker") ||
-      name.includes("boot")
+      name.includes("sneaker")
     ) {
+      if (isWhite) {
+        items = [
+          { id: "front", label: "FRONT", url: mainImg },
+          {
+            id: "side",
+            label: "PROFILE SIDE",
+            url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80",
+          },
+          {
+            id: "back",
+            label: "HEEL BACK",
+            url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80",
+          },
+          { id: "detail", label: "LEATHER DETAIL", url: mainImg, isZoom: true },
+          { id: "model", label: "ON-FEET FIT", url: modelImage },
+        ];
+      } else {
+        items = [
+          { id: "front", label: "FRONT", url: mainImg },
+          {
+            id: "side",
+            label: "PROFILE SIDE",
+            url: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80",
+          },
+          {
+            id: "back",
+            label: "HEEL BACK",
+            url: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
+          },
+          { id: "detail", label: "SOLE DETAIL", url: mainImg, isZoom: true },
+          { id: "model", label: "ON-FEET FIT", url: modelImage },
+        ];
+      }
+    }
+    // --- DEFAULT BAGS & ACCESSORIES ---
+    else {
       items = [
-        { id: "front", label: "FRONT", url: product.image_url },
-        {
-          id: "side",
-          label: "SIDE",
-          url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "back",
-          label: "BACK",
-          url: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "sole",
-          label: "SOLE",
-          url: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "detail",
-          label: "DETAIL",
-          url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
-        },
-        { id: "model", label: "MODEL", url: modelImage },
-      ];
-    } else if (
-      cat.includes("bag") ||
-      name.includes("bag") ||
-      name.includes("leather") ||
-      name.includes("tote")
-    ) {
-      items = [
-        { id: "front", label: "FRONT", url: product.image_url },
-        {
-          id: "inside",
-          label: "INSIDE",
-          url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "side",
-          label: "SIDE",
-          url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "detail",
-          label: "DETAIL",
-          url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
-        },
-        { id: "model", label: "MODEL", url: modelImage },
-      ];
-    } else {
-      items = [
-        { id: "front", label: "FRONT", url: product.image_url },
-        {
-          id: "back",
-          label: "BACK",
-          url: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80",
-        },
-        {
-          id: "side",
-          label: "SIDE",
-          url: "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?auto=format&fit=crop&w=800&q=80",
-        },
-        { id: "model", label: "MODEL", url: modelImage },
+        { id: "front", label: "FRONT", url: mainImg },
+        { id: "side", label: "SIDE VIEW", url: mainImg },
+        { id: "detail", label: "HARDWARE DETAIL", url: mainImg, isZoom: true },
+        { id: "model", label: "MODEL FIT", url: modelImage },
       ];
     }
 
-    if (product.gallery && Array.isArray(product.gallery) && product.gallery.length > 0) {
+    // Append custom gallery photos if provided by backend
+    if (
+      product.gallery &&
+      Array.isArray(product.gallery) &&
+      product.gallery.length > 0
+    ) {
       product.gallery.forEach((gUrl, idx) => {
         if (!items.some((it) => it.url === gUrl)) {
           items.push({ id: `gal-${idx}`, label: `ANGLE ${idx + 2}`, url: gUrl });
@@ -227,7 +264,7 @@ const ProductDetailModal = ({
     }
 
     return items;
-  }, [product, modelImage]);
+  }, [product, selectedColor, modelImage]);
 
   useEffect(() => {
     if (product) {
@@ -305,7 +342,11 @@ const ProductDetailModal = ({
 
   const handleColorSelect = (col) => {
     setSelectedColor(col);
-    const targetImage = getColorImageUrl(col, product?.category?.name, product?.image_url);
+    const targetImage = getColorImageUrl(
+      col,
+      product?.category?.name,
+      product?.image_url
+    );
     setActiveImage(targetImage);
   };
 
@@ -315,11 +356,16 @@ const ProductDetailModal = ({
   };
 
   // Find active image item in angle gallery
-  const activeIndex = productAngleGallery.findIndex((item) => item.url === activeImage);
-  const currentAngleItem = productAngleGallery[activeIndex >= 0 ? activeIndex : 0];
+  const activeIndex = productAngleGallery.findIndex(
+    (item) => item.url === activeImage
+  );
+  const currentAngleItem =
+    productAngleGallery[activeIndex >= 0 ? activeIndex : 0];
 
   const handlePrevImage = () => {
-    const prevIdx = (activeIndex - 1 + productAngleGallery.length) % productAngleGallery.length;
+    const prevIdx =
+      (activeIndex - 1 + productAngleGallery.length) %
+      productAngleGallery.length;
     setActiveImage(productAngleGallery[prevIdx].url);
   };
 
@@ -346,13 +392,15 @@ const ProductDetailModal = ({
             <img
               src={activeImage || product.image_url}
               alt={product.name}
-              className="w-full h-full object-cover object-center transition-all duration-300 ease-out"
+              className={`w-full h-full object-cover object-center transition-all duration-500 ease-out ${
+                currentAngleItem?.isZoom ? "scale-[1.65] origin-center cursor-zoom-out" : "scale-100"
+              }`}
             />
 
             {/* Active View Angle Badge Overlay */}
-            <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+            <div className="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-none">
               <span className="bg-black/90 backdrop-blur-md text-white text-[9px] sm:text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-md tracking-widest shadow-md border border-white/20">
-                {currentAngleItem?.label || "FRONT"} VIEW
+                {currentAngleItem?.label || "FRONT VIEW"}
               </span>
             </div>
 
@@ -377,10 +425,11 @@ const ProductDetailModal = ({
             )}
           </div>
 
-          {/* Multi-Angle Image Element Cards Strip (FRONT, BACK, LEFT, RIGHT, DETAIL, MODEL) */}
+          {/* Coherent Multi-Angle Image Element Cards Strip (FRONT, BACK, SIDE, DETAIL, MODEL) */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
             {productAngleGallery.map((item, idx) => {
-              const isActive = activeImage === item.url || (idx === 0 && !activeImage);
+              const isActive =
+                activeImage === item.url || (idx === 0 && !activeImage);
               return (
                 <button
                   key={item.id || idx}
@@ -395,14 +444,16 @@ const ProductDetailModal = ({
                   <img
                     src={item.url}
                     alt={item.label}
-                    className="w-full h-full object-cover object-center group-hover/thumb:scale-105 transition-transform duration-300"
+                    className={`w-full h-full object-cover object-center group-hover/thumb:scale-105 transition-transform duration-300 ${
+                      item.isZoom ? "scale-[1.5]" : ""
+                    }`}
                   />
                   {/* Miniature Tag Badge */}
                   <div
                     className={`absolute bottom-0 inset-x-0 py-0.5 text-[8px] font-mono font-extrabold uppercase text-center tracking-wider transition-colors ${
                       isActive
                         ? "bg-black text-white"
-                        : "bg-black/60 text-white group-hover/thumb:bg-black"
+                        : "bg-black/70 text-white group-hover/thumb:bg-black"
                     }`}
                   >
                     {item.label}
