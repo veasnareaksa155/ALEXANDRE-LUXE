@@ -5,6 +5,8 @@ import {
   CloseOutlined,
   HeartOutlined,
   HeartFilled,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 
 const ProductDetailModal = ({
@@ -73,14 +75,159 @@ const ProductDetailModal = ({
     return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80";
   }, [product]);
 
-  // Gallery images array
-  const galleryImages = useMemo(() => {
+  // Multi-angle gallery array (Front, Back, Left, Right, Detail, Model)
+  const productAngleGallery = useMemo(() => {
     if (!product) return [];
-    if (product.images && Array.isArray(product.images)) return product.images;
-    if (product.gallery && Array.isArray(product.gallery))
-      return [product.image_url, ...product.gallery];
-    return [product.image_url];
-  }, [product]);
+    const cat = (product?.category?.name || "").toLowerCase();
+    const name = (product?.name || "").toLowerCase();
+    const mainImg = activeImage || product.image_url;
+
+    let items = [];
+
+    if (
+      cat.includes("t-shirt") ||
+      cat.includes("tee") ||
+      name.includes("tee") ||
+      name.includes("t-shirt")
+    ) {
+      items = [
+        { id: "front", label: "FRONT", url: product.image_url },
+        {
+          id: "back",
+          label: "BACK",
+          url: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "left",
+          label: "LEFT",
+          url: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "right",
+          label: "RIGHT",
+          url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "detail",
+          label: "DETAIL",
+          url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80",
+        },
+        { id: "model", label: "MODEL", url: modelImage },
+      ];
+    } else if (
+      cat.includes("shirt") ||
+      cat.includes("suit") ||
+      name.includes("shirt") ||
+      name.includes("suit") ||
+      name.includes("blazer")
+    ) {
+      items = [
+        { id: "front", label: "FRONT", url: product.image_url },
+        {
+          id: "back",
+          label: "BACK",
+          url: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "left",
+          label: "LEFT",
+          url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "right",
+          label: "RIGHT",
+          url: "https://images.unsplash.com/photo-1603252109303-2751441dd157?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "detail",
+          label: "DETAIL",
+          url: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80",
+        },
+        { id: "model", label: "MODEL", url: modelImage },
+      ];
+    } else if (
+      cat.includes("shoe") ||
+      cat.includes("footwear") ||
+      name.includes("shoe") ||
+      name.includes("sneaker") ||
+      name.includes("boot")
+    ) {
+      items = [
+        { id: "front", label: "FRONT", url: product.image_url },
+        {
+          id: "side",
+          label: "SIDE",
+          url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "back",
+          label: "BACK",
+          url: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "sole",
+          label: "SOLE",
+          url: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "detail",
+          label: "DETAIL",
+          url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+        },
+        { id: "model", label: "MODEL", url: modelImage },
+      ];
+    } else if (
+      cat.includes("bag") ||
+      name.includes("bag") ||
+      name.includes("leather") ||
+      name.includes("tote")
+    ) {
+      items = [
+        { id: "front", label: "FRONT", url: product.image_url },
+        {
+          id: "inside",
+          label: "INSIDE",
+          url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "side",
+          label: "SIDE",
+          url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "detail",
+          label: "DETAIL",
+          url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+        },
+        { id: "model", label: "MODEL", url: modelImage },
+      ];
+    } else {
+      items = [
+        { id: "front", label: "FRONT", url: product.image_url },
+        {
+          id: "back",
+          label: "BACK",
+          url: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "side",
+          label: "SIDE",
+          url: "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?auto=format&fit=crop&w=800&q=80",
+        },
+        { id: "model", label: "MODEL", url: modelImage },
+      ];
+    }
+
+    if (product.gallery && Array.isArray(product.gallery) && product.gallery.length > 0) {
+      product.gallery.forEach((gUrl, idx) => {
+        if (!items.some((it) => it.url === gUrl)) {
+          items.push({ id: `gal-${idx}`, label: `ANGLE ${idx + 2}`, url: gUrl });
+        }
+      });
+    }
+
+    return items;
+  }, [product, modelImage]);
 
   useEffect(() => {
     if (product) {
@@ -156,13 +303,9 @@ const ProductDetailModal = ({
     return defaultImg;
   };
 
-  const handleColorSelect = (col, idx) => {
+  const handleColorSelect = (col) => {
     setSelectedColor(col);
-    const targetImage =
-      product?.color_images?.[col] ||
-      (galleryImages[idx] && galleryImages[idx] !== product?.image_url
-        ? galleryImages[idx]
-        : getColorImageUrl(col, product?.category?.name, product?.image_url));
+    const targetImage = getColorImageUrl(col, product?.category?.name, product?.image_url);
     setActiveImage(targetImage);
   };
 
@@ -171,68 +314,102 @@ const ProductDetailModal = ({
     onClose();
   };
 
-  const isShowingModel = activeImage === modelImage;
+  // Find active image item in angle gallery
+  const activeIndex = productAngleGallery.findIndex((item) => item.url === activeImage);
+  const currentAngleItem = productAngleGallery[activeIndex >= 0 ? activeIndex : 0];
+
+  const handlePrevImage = () => {
+    const prevIdx = (activeIndex - 1 + productAngleGallery.length) % productAngleGallery.length;
+    setActiveImage(productAngleGallery[prevIdx].url);
+  };
+
+  const handleNextImage = () => {
+    const nextIdx = (activeIndex + 1) % productAngleGallery.length;
+    setActiveImage(productAngleGallery[nextIdx].url);
+  };
 
   return (
     <Modal
       open={open}
       onCancel={onClose}
       footer={null}
-      width={840}
+      width={860}
       centered
       closeIcon={<CloseOutlined className="text-xs sm:text-sm md:text-base" />}
       className="product-detail-modal"
     >
-      <div className="flex flex-col md:flex-row gap-4 sm:gap-6 items-stretch pt-0.5">
-        {/* Left: Product & Model Lookbook Showcase */}
-        <div className="w-full md:w-1/2 flex flex-col gap-2 flex-shrink-0">
+      <div className="flex flex-col md:flex-row gap-5 sm:gap-6 items-stretch pt-0.5">
+        {/* Left: Multi-Angle Interactive Product Gallery Showcase */}
+        <div className="w-full md:w-1/2 flex flex-col gap-3 flex-shrink-0">
+          {/* Main Hero Display Viewport */}
           <div className="relative aspect-[3/4] w-full bg-neutral-100 rounded-xl overflow-hidden border border-neutral-200 shadow-md group">
             <img
               src={activeImage || product.image_url}
               alt={product.name}
-              className="w-full h-full object-cover object-center transition-all duration-500 ease-out"
+              className="w-full h-full object-cover object-center transition-all duration-300 ease-out"
             />
 
-            {/* Badges */}
+            {/* Active View Angle Badge Overlay */}
             <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
-              {product.is_new && !isShowingModel && (
-                <span className="bg-black text-white text-[9px] sm:text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md">
-                  NEW COLLECTION
-                </span>
-              )}
-              {isShowingModel && (
-                <span className="bg-amber-500 text-black text-[9px] sm:text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md flex items-center gap-1">
-                  👤 MODEL LOOKBOOK • ON-BODY
-                </span>
-              )}
+              <span className="bg-black/90 backdrop-blur-md text-white text-[9px] sm:text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-md tracking-widest shadow-md border border-white/20">
+                {currentAngleItem?.label || "FRONT"} VIEW
+              </span>
             </div>
+
+            {/* Navigation Arrows for Quick Image Angle Flipping */}
+            {productAngleGallery.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 cursor-pointer shadow-md backdrop-blur-sm"
+                  title="Previous Angle"
+                >
+                  <LeftOutlined className="text-xs" />
+                </button>
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 cursor-pointer shadow-md backdrop-blur-sm"
+                  title="Next Angle"
+                >
+                  <RightOutlined className="text-xs" />
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Model & Flat Lay View Selector Thumbnails */}
-          <div className="flex items-center gap-2 pt-1">
-            {/* View Mode 1: Product Flat Lay */}
-            <button
-              onClick={() => setActiveImage(product.image_url)}
-              className={`flex-1 py-1.5 px-3 rounded-lg border text-[11px] font-mono font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                !isShowingModel
-                  ? "bg-black text-white border-black shadow-xs"
-                  : "bg-white text-neutral-600 border-neutral-200 hover:border-black"
-              }`}
-            >
-              <span>👔 PRODUCT SHOT</span>
-            </button>
-
-            {/* View Mode 2: Model On-Body Lookbook */}
-            <button
-              onClick={() => setActiveImage(modelImage)}
-              className={`flex-1 py-1.5 px-3 rounded-lg border text-[11px] font-mono font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                isShowingModel
-                  ? "bg-amber-500 text-black border-amber-500 shadow-xs"
-                  : "bg-white text-neutral-600 border-neutral-200 hover:border-black"
-              }`}
-            >
-              <span>👤 MODEL FIT</span>
-            </button>
+          {/* Multi-Angle Image Element Cards Strip (FRONT, BACK, LEFT, RIGHT, DETAIL, MODEL) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+            {productAngleGallery.map((item, idx) => {
+              const isActive = activeImage === item.url || (idx === 0 && !activeImage);
+              return (
+                <button
+                  key={item.id || idx}
+                  onClick={() => setActiveImage(item.url)}
+                  className={`relative flex-shrink-0 w-14 sm:w-16 h-18 sm:h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer group/thumb ${
+                    isActive
+                      ? "border-black ring-2 ring-black/20 shadow-md scale-[1.02]"
+                      : "border-neutral-200 hover:border-neutral-400 opacity-75 hover:opacity-100"
+                  }`}
+                  title={`${item.label} Angle View`}
+                >
+                  <img
+                    src={item.url}
+                    alt={item.label}
+                    className="w-full h-full object-cover object-center group-hover/thumb:scale-105 transition-transform duration-300"
+                  />
+                  {/* Miniature Tag Badge */}
+                  <div
+                    className={`absolute bottom-0 inset-x-0 py-0.5 text-[8px] font-mono font-extrabold uppercase text-center tracking-wider transition-colors ${
+                      isActive
+                        ? "bg-black text-white"
+                        : "bg-black/60 text-white group-hover/thumb:bg-black"
+                    }`}
+                  >
+                    {item.label}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -309,13 +486,13 @@ const ProductDetailModal = ({
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {product.colors.map((col, idx) => {
+                    {product.colors.map((col) => {
                       const hexColor = colorMap[col.toLowerCase()] || "#000000";
                       const isSelected = selectedColor === col;
                       return (
                         <button
                           key={col}
-                          onClick={() => handleColorSelect(col, idx)}
+                          onClick={() => handleColorSelect(col)}
                           className={`px-3 py-1.5 text-xs font-extrabold rounded border transition-all flex items-center gap-2 cursor-pointer ${
                             isSelected
                               ? "bg-black text-white border-black shadow-sm"
@@ -342,7 +519,7 @@ const ProductDetailModal = ({
             <div className="flex items-center border border-neutral-300 rounded-md overflow-hidden h-8.5 sm:h-9.5 md:h-10.5 bg-neutral-50 flex-shrink-0">
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-5.5 sm:w-6.5 md:w-7.5 h-full flex items-center justify-center font-bold text-xs md:text-sm hover:bg-neutral-200 transition-colors"
+                className="w-5.5 sm:w-6.5 md:w-7.5 h-full flex items-center justify-center font-bold text-xs md:text-sm hover:bg-neutral-200 transition-colors cursor-pointer"
               >
                 -
               </button>
@@ -351,7 +528,7 @@ const ProductDetailModal = ({
               </span>
               <button
                 onClick={() => setQuantity((q) => q + 1)}
-                className="w-5.5 sm:w-6.5 md:w-7.5 h-full flex items-center justify-center font-bold text-xs md:text-sm hover:bg-neutral-200 transition-colors"
+                className="w-5.5 sm:w-6.5 md:w-7.5 h-full flex items-center justify-center font-bold text-xs md:text-sm hover:bg-neutral-200 transition-colors cursor-pointer"
               >
                 +
               </button>
