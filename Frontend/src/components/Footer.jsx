@@ -184,8 +184,7 @@ const Footer = ({ onSelectCategory, onNavigatePage }) => {
         {/* Bottom Copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-neutral-400 font-mono font-medium">
           <p>
-            &copy; {new Date().getFullYear()} LEGACY STORE. ALL RIGHTS
-            RESERVED.
+            &copy; {new Date().getFullYear()} LEGACY STORE. ALL RIGHTS RESERVED.
           </p>
           <div className="flex space-x-6 mt-4 sm:mt-0">
             <span>VISA</span>

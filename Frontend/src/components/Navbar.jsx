@@ -70,7 +70,8 @@ const Navbar = ({
         {/* Top Announcement Banner (Desktop / Tablet) */}
         <div className="hidden sm:block bg-black text-white text-xs py-2 px-4 text-center font-medium tracking-widest uppercase">
           <span>
-            ✨ Free Worldwide Express Shipping on Orders Over $200 | Legacy Store
+            ✨ Free Worldwide Express Shipping on Orders Over $200 | Legacy
+            Store
           </span>
         </div>
 
