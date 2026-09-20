@@ -15,6 +15,8 @@ import Footer from "./components/Footer";
 import CategoryBar from "./components/CategoryBar";
 import ProductGrid from "./components/ProductGrid";
 
+import DeliveryTrackingModal from "./components/DeliveryTrackingModal";
+
 // Full View Pages
 import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
@@ -23,12 +25,29 @@ import LookbookPage from "./pages/LookbookPage";
 import ContactPage from "./pages/ContactPage";
 import UserAccountPage from "./pages/UserAccountPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import DeliveryDriverPage from "./pages/DeliveryDriverPage";
 
 function App() {
-  // State variables
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // State variables (with instant 0ms local cache initialization)
+  const [categories, setCategories] = useState(() => {
+    try {
+      const cached = localStorage.getItem("lx_cached_categories");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [products, setProducts] = useState(() => {
+    try {
+      const cached = localStorage.getItem("lx_cached_products");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [loading, setLoading] = useState(() => products.length === 0);
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
@@ -43,6 +62,21 @@ function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState(null);
+  const [deliveryTrackingOpen, setDeliveryTrackingOpen] = useState(false);
+  const [activeDeliveryOrder, setActiveDeliveryOrder] = useState({
+    id: 1,
+    order_number: "LX-98214",
+    customer_name: "Alexandre VIP",
+    customer_email: "vip@alexandreluxe.com",
+    phone: "+855 12 777 888",
+    shipping_address: "Vattanac Capital Tower, Preah Monivong Blvd, Phnom Penh",
+    total_amount: 380.0,
+    status: "delivering",
+    delivery_status: "out_for_delivery",
+    courier_name: "Sokha Express Courier",
+    courier_phone: "+855 12 888 999",
+    estimated_minutes: 15,
+  });
 
   // Authenticated User Profile State (persisted in localStorage)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -74,46 +108,60 @@ function App() {
     }
   }, [currentUser]);
 
-  // Cart Items State (persisted in localStorage)
+  // Cart & Wishlist storage keys per user
+  const userCartKey = `alexandre_luxe_cart_${currentUser?.email || "guest"}`;
+  const userWishlistKey = `alexandre_luxe_wishlist_${currentUser?.email || "guest"}`;
+
+  // Cart Items State (persisted per user in localStorage)
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const saved = localStorage.getItem("alexandre_luxe_cart");
+      const saved = localStorage.getItem(userCartKey);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // Wishlist Items State (persisted in localStorage)
+  // Wishlist Items State (persisted per user in localStorage)
   const [wishlistItems, setWishlistItems] = useState(() => {
     try {
-      const saved = localStorage.getItem("alexandre_luxe_wishlist");
+      const saved = localStorage.getItem(userWishlistKey);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // Save cart to localStorage
+  // Re-sync cart & wishlist when logged-in user changes
   useEffect(() => {
     try {
-      localStorage.setItem("alexandre_luxe_cart", JSON.stringify(cartItems));
+      const savedCart = localStorage.getItem(userCartKey);
+      setCartItems(savedCart ? JSON.parse(savedCart) : []);
+
+      const savedWishlist = localStorage.getItem(userWishlistKey);
+      setWishlistItems(savedWishlist ? JSON.parse(savedWishlist) : []);
+    } catch (e) {
+      console.error("Failed to re-sync cart/wishlist:", e);
+    }
+  }, [currentUser?.email]);
+
+  // Save cart to localStorage per user
+  useEffect(() => {
+    try {
+      localStorage.setItem(userCartKey, JSON.stringify(cartItems));
     } catch (e) {
       console.error("Failed to save cart:", e);
     }
-  }, [cartItems]);
+  }, [cartItems, userCartKey]);
 
-  // Save wishlist to localStorage
+  // Save wishlist to localStorage per user
   useEffect(() => {
     try {
-      localStorage.setItem(
-        "alexandre_luxe_wishlist",
-        JSON.stringify(wishlistItems),
-      );
+      localStorage.setItem(userWishlistKey, JSON.stringify(wishlistItems));
     } catch (e) {
       console.error("Failed to save wishlist:", e);
     }
-  }, [wishlistItems]);
+  }, [wishlistItems, userWishlistKey]);
 
   // IntersectionObserver for Scroll Animations
   useEffect(() => {
@@ -331,13 +379,14 @@ function App() {
     }
   }, [currentUser, activePage]);
 
-  // Route Listener for /admin URL entry & URL sync
+  // Route Listener for /admin and /delivery URL entry & URL sync
   useEffect(() => {
     const checkRoute = () => {
-      if (
-        window.location.pathname === "/admin" ||
-        window.location.search.includes("admin")
-      ) {
+      const path = window.location.pathname;
+      const search = window.location.search;
+      if (path === "/delivery" || search.includes("delivery")) {
+        setActivePage("delivery");
+      } else if (path === "/admin" || search.includes("admin")) {
         setActivePage("admin");
       }
     };
@@ -348,15 +397,31 @@ function App() {
 
   // Sync browser URL bar with activePage state
   useEffect(() => {
-    if (activePage === "admin" && window.location.pathname !== "/admin") {
+    if (activePage === "delivery" && window.location.pathname !== "/delivery") {
+      window.history.pushState({}, "", "/delivery");
+    } else if (
+      activePage === "admin" &&
+      window.location.pathname !== "/admin"
+    ) {
       window.history.pushState({}, "", "/admin");
     } else if (
       activePage !== "admin" &&
-      window.location.pathname === "/admin"
+      activePage !== "delivery" &&
+      (window.location.pathname === "/admin" ||
+        window.location.pathname === "/delivery")
     ) {
       window.history.pushState({}, "", "/");
     }
   }, [activePage]);
+
+  // Handle Mobile Delivery Driver App Layout (/delivery route)
+  if (activePage === "delivery") {
+    return (
+      <ConfigProvider theme={luxuryTheme}>
+        <DeliveryDriverPage onNavigateHome={() => setActivePage("home")} />
+      </ConfigProvider>
+    );
+  }
 
   // Handle Admin Isolated Full-Screen Layout vs Store Customer Layout
   if (activePage === "admin") {
@@ -378,12 +443,16 @@ function App() {
             {/* Ambient Dark Luxury Background Layer */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black opacity-95" />
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center mix-blend-overlay opacity-15 filter blur-xs" />
-            
+
             {/* Header Brand Bar */}
             <div className="absolute top-5 left-6 right-6 flex items-center justify-between z-10 pointer-events-none">
               <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm font-serif font-black tracking-[0.25em] uppercase text-white">ALEXANDRE LUXE</span>
-                <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-extrabold tracking-wider">SUPERADMIN</span>
+                <span className="text-xs sm:text-sm font-serif font-black tracking-[0.25em] uppercase text-white">
+                  ALEXANDRE LUXE
+                </span>
+                <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-extrabold tracking-wider">
+                  SUPERADMIN
+                </span>
               </div>
               <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-black/60 px-3 py-1 rounded-full border border-emerald-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -410,7 +479,7 @@ function App() {
 
   return (
     <ConfigProvider theme={luxuryTheme}>
-      <div className="min-h-screen bg-white text-neutral-900 font-sans antialiased flex flex-col justify-between">
+      <div className="min-h-screen bg-white text-neutral-900 font-sans antialiased flex flex-col justify-between pb-16 md:pb-0">
         {/* Header Navigation Bar */}
         <Navbar
           cartCount={totalCartCount}
@@ -430,6 +499,7 @@ function App() {
           }}
           onOpenAuthModal={() => setAuthModalOpen(true)}
           onLogout={handleLogout}
+          onOpenDeliveryTracking={() => setDeliveryTrackingOpen(true)}
         />
 
         {/* Main Content Area */}
@@ -518,6 +588,7 @@ function App() {
               : false
           }
           onToggleWishlist={handleToggleWishlist}
+          currentUser={currentUser}
         />
 
         {/* Cart Drawer */}
@@ -557,6 +628,21 @@ function App() {
           open={!!orderSuccessData}
           onClose={() => setOrderSuccessData(null)}
           orderData={orderSuccessData}
+          onOpenDeliveryTracking={(ord) => {
+            if (ord) setActiveDeliveryOrder(ord);
+            setDeliveryTrackingOpen(true);
+          }}
+        />
+
+        {/* Real Delivery Tracking Modal */}
+        <DeliveryTrackingModal
+          open={deliveryTrackingOpen}
+          onClose={() => setDeliveryTrackingOpen(false)}
+          order={activeDeliveryOrder}
+          onNavigateDriverApp={() => {
+            setDeliveryTrackingOpen(false);
+            setActivePage("delivery");
+          }}
         />
 
         {/* Footer */}

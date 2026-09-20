@@ -47,7 +47,14 @@ export const luxuryTheme = {
     },
     Select: {
       colorPrimary: "#000000",
-      colorPrimaryHover: "#333333",
+      colorPrimaryHover: "#222222",
+      colorBgContainer: "#ffffff",
+      colorBgElevated: "#ffffff",
+      colorText: "#111111",
+      colorTextPlaceholder: "#666666",
+      optionSelectedBg: "#000000",
+      optionSelectedColor: "#ffffff",
+      optionActiveBg: "#f5f5f5",
     },
   },
 };

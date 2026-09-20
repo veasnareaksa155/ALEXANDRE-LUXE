@@ -46,6 +46,7 @@ import {
   PhoneOutlined,
   CheckOutlined,
   CloseOutlined,
+  CarOutlined,
 } from "@ant-design/icons";
 import {
   fetchProducts,
@@ -2095,8 +2096,42 @@ const AdminDashboardPage = ({
               className="text-xs"
               options={[
                 { value: "user", label: "👤 VIP Client (Standard User)" },
+                {
+                  value: "driver",
+                  label: "🚚 Delivery Driver (Courier Mobile App)",
+                },
                 { value: "admin", label: "⚡ SuperAdmin (Full Control)" },
               ]}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={
+              <span className="text-xs font-bold uppercase text-neutral-700">
+                Phone Number
+              </span>
+            }
+            name="phone"
+          >
+            <Input
+              prefix={<PhoneOutlined className="text-neutral-400" />}
+              placeholder="e.g. +855 12 888 999"
+              className="text-xs py-2 rounded-md"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={
+              <span className="text-xs font-bold uppercase text-neutral-700">
+                Vehicle Tag / License Plate (For Delivery Drivers)
+              </span>
+            }
+            name="vehicle_tag"
+          >
+            <Input
+              prefix={<CarOutlined className="text-neutral-400" />}
+              placeholder="e.g. PP-9921 (Sokha Express)"
+              className="text-xs py-2 rounded-md"
             />
           </Form.Item>
 

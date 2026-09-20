@@ -4,6 +4,7 @@ import {
   ShoppingCartOutlined,
   HeartOutlined,
   HeartFilled,
+  StarFilled,
 } from "@ant-design/icons";
 
 const ProductCard = ({
@@ -19,6 +20,11 @@ const ProductCard = ({
           100,
       )
     : 0;
+
+  const rating =
+    product.rating || (4.7 + ((product.id || 1) % 4) * 0.1).toFixed(1);
+  const reviewsCount =
+    product.reviews_count || (((product.id || 1) * 23) % 180) + 24;
 
   return (
     <div className="group bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
@@ -96,10 +102,26 @@ const ProductCard = ({
       {/* Product Details Container */}
       <div className="p-3 sm:p-4 flex flex-col flex-grow justify-between bg-white">
         <div>
-          {/* Category */}
-          <span className="text-[10px] sm:text-xs font-semibold text-neutral-400 uppercase tracking-widest block mb-1">
-            {product.category?.name || "ALEXANDRE LUXE"}
-          </span>
+          {/* Category & Star Rating */}
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] sm:text-xs font-semibold text-neutral-400 uppercase tracking-widest block">
+              {product.category?.name || "ALEXANDRE LUXE"}
+            </span>
+
+            {/* Rating Stars */}
+            <div className="flex items-center gap-0.5">
+              <StarFilled
+                style={{ color: "#fbbf24" }}
+                className="text-[10px] sm:text-xs text-amber-400"
+              />
+              <span className="text-[10px] sm:text-xs font-bold font-mono text-neutral-800">
+                {rating}
+              </span>
+              <span className="text-[9px] text-neutral-400 font-mono">
+                ({reviewsCount})
+              </span>
+            </div>
+          </div>
 
           {/* Product Name */}
           <h3

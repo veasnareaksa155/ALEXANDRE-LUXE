@@ -26,7 +26,8 @@ const AdminAuthModal = ({ open, onClose, onLoginSuccess }) => {
 
       notification.success({
         message: "EXECUTIVE ACCESS GRANTED",
-        description: "Authenticated successfully. Welcome to Alexandre Luxe Admin Panel.",
+        description:
+          "Authenticated successfully. Welcome to Alexandre Luxe Admin Panel.",
         placement: "bottomRight",
         duration: 2.5,
       });
@@ -75,7 +76,8 @@ const AdminAuthModal = ({ open, onClose, onLoginSuccess }) => {
             ADMIN PORTAL ACCESS
           </h2>
           <p className="text-xs text-neutral-400 font-light max-w-xs mx-auto mt-1.5 leading-relaxed">
-            Enter administrative key credentials to access inventory control, orders management, and analytics.
+            Enter administrative key credentials to access inventory control,
+            orders management, and analytics.
           </p>
         </div>
 
@@ -109,7 +111,9 @@ const AdminAuthModal = ({ open, onClose, onLoginSuccess }) => {
               ADMIN EMAIL ACCOUNT
             </span>
           }
-          rules={[{ required: true, message: "Please enter admin email address" }]}
+          rules={[
+            { required: true, message: "Please enter admin email address" },
+          ]}
           className="mb-3"
         >
           <Input
@@ -179,7 +183,9 @@ const AdminAuthModal = ({ open, onClose, onLoginSuccess }) => {
       width={480}
       centered
       destroyOnClose
-      closeIcon={<CloseOutlined className="text-neutral-400 hover:text-white text-base" />}
+      closeIcon={
+        <CloseOutlined className="text-neutral-400 hover:text-white text-base" />
+      }
       className="admin-auth-modal"
       modalRender={() => modalContent}
     />

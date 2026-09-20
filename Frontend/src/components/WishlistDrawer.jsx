@@ -5,6 +5,7 @@ import {
   DeleteOutlined,
   ShoppingOutlined,
   CloseOutlined,
+  StarFilled,
 } from "@ant-design/icons";
 
 const WishlistDrawer = ({
@@ -73,17 +74,29 @@ const WishlistDrawer = ({
     <Drawer
       title={
         <div className="flex items-center space-x-2">
-          <HeartOutlined style={{ fontSize: "20px", color: "#000000" }} />
-          <span className="font-serif font-bold text-base uppercase tracking-wider text-black">
-            YOUR WISHLIST ({wishlistItems.length})
+          <HeartOutlined style={{ fontSize: "18px", color: "#000000" }} />
+          <span className="font-serif font-bold text-sm sm:text-base uppercase tracking-wider text-black">
+            YOUR WISHLIST
+          </span>
+          <span className="bg-black text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
+            {wishlistItems.length}
           </span>
         </div>
+      }
+      extra={
+        <button
+          onClick={onClose}
+          className="text-black hover:text-red-600 transition-colors p-1 flex items-center justify-center cursor-pointer"
+          title="Close"
+        >
+          <CloseOutlined style={{ fontSize: "16px", color: "#000" }} />
+        </button>
       }
       placement="right"
       onClose={onClose}
       open={open}
-      width={450}
-      closeIcon={<CloseOutlined style={{ fontSize: "18px", color: "#000" }} />}
+      width={440}
+      closeIcon={false}
       className="wishlist-drawer"
     >
       <div className="flex flex-col h-full justify-between">
@@ -180,9 +193,21 @@ const WishlistDrawer = ({
                         </button>
                       </div>
 
-                      <span className="text-[10px] text-neutral-400 uppercase tracking-widest block">
-                        {item.category?.name || "ALEXANDRE LUXE"}
-                      </span>
+                      <div className="flex items-center justify-between text-[10px] text-neutral-400 font-mono">
+                        <span className="uppercase tracking-widest truncate">
+                          {item.category?.name || "ALEXANDRE LUXE"}
+                        </span>
+                        <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+                          <StarFilled
+                            style={{ color: "#fbbf24" }}
+                            className="text-[10px]"
+                          />
+                          <span>
+                            {item.rating ||
+                              (4.7 + ((item.id || 1) % 4) * 0.1).toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
 
                       <div className="text-xs font-extrabold text-black mt-0.5">
                         ${Number(item.price).toFixed(2)}

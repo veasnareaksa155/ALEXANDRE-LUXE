@@ -36,7 +36,13 @@ class OrderController extends Controller
             'shipping_address' => $validated['shipping_address'],
             'payment_method' => $validated['payment_method'] ?? 'card',
             'total_amount' => 0,
-            'status' => 'completed',
+            'status' => 'processing',
+            'delivery_status' => 'processing',
+            'courier_name' => 'Sokha Delivery Express',
+            'courier_phone' => '+855 12 888 999',
+            'driver_lat' => 11.5564,
+            'driver_lng' => 104.9282,
+            'estimated_minutes' => 25,
         ]);
 
         foreach ($validated['items'] as $itemData) {
@@ -68,9 +74,15 @@ class OrderController extends Controller
         ], 201);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $orders = Order::with('items')->orderBy('created_at', 'desc')->get();
+        $query = Order::with('items')->orderBy('created_at', 'desc');
+
+        if ($request->has('email') && !empty($request->email)) {
+            $query->where('customer_email', $request->email);
+        }
+
+        $orders = $query->get();
 
         return response()->json([
             'success' => true,
@@ -87,15 +99,88 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|string|in:pending,processing,shipped,delivered,completed,cancelled',
+            'status' => 'required|string|in:pending,processing,shipped,delivering,delivered,completed,cancelled',
+            'courier_name' => 'nullable|string|max:100',
+            'courier_phone' => 'nullable|string|max:50',
+            'estimated_minutes' => 'nullable|integer',
         ]);
 
-        $order->update(['status' => $validated['status']]);
+        $updateData = ['status' => $validated['status']];
+        $updateData['delivery_status'] = $validated['status'];
+
+        if (isset($validated['courier_name']))
+            $updateData['courier_name'] = $validated['courier_name'];
+        if (isset($validated['courier_phone']))
+            $updateData['courier_phone'] = $validated['courier_phone'];
+        if (isset($validated['estimated_minutes']))
+            $updateData['estimated_minutes'] = $validated['estimated_minutes'];
+
+        $order->update($updateData);
 
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully!',
             'data' => $order->load('items')
+        ]);
+    }
+
+    /**
+     * Get real-time delivery status & driver location
+     */
+    public function getDeliveryStatus($idOrNumber): JsonResponse
+    {
+        $order = Order::with('items')
+            ->where('id', $idOrNumber)
+            ->orWhere('order_number', $idOrNumber)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $order
+        ]);
+    }
+
+    /**
+     * Driver updates live GPS coordinates & delivery progress
+     */
+    public function updateDeliveryLocation(Request $request, $id): JsonResponse
+    {
+        $order = Order::find($id);
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'driver_lat' => 'required|numeric',
+            'driver_lng' => 'required|numeric',
+            'estimated_minutes' => 'nullable|integer',
+            'delivery_status' => 'nullable|string|in:pending,processing,shipped,delivering,delivered,completed',
+        ]);
+
+        $updateData = [
+            'driver_lat' => $validated['driver_lat'],
+            'driver_lng' => $validated['driver_lng'],
+        ];
+
+        if (isset($validated['estimated_minutes'])) {
+            $updateData['estimated_minutes'] = $validated['estimated_minutes'];
+        }
+
+        if (isset($validated['delivery_status'])) {
+            $updateData['delivery_status'] = $validated['delivery_status'];
+            $updateData['status'] = $validated['delivery_status'];
+        }
+
+        $order->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Delivery location updated!',
+            'data' => $order
         ]);
     }
 

@@ -6,12 +6,16 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BakongPaymentController;
+use App\Http\Controllers\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 */
+
+// Authentication Route
+Route::post('/login', [UserController::class, 'login']);
 
 // Category Routes
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -26,10 +30,16 @@ Route::post('/products', [ProductController::class, 'store']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
-// Order Routes
+// Product Rating & Review Routes
+Route::get('/products/{id}/reviews', [ReviewController::class, 'index']);
+Route::post('/products/{id}/reviews', [ReviewController::class, 'store']);
+
+// Order Routes & Real-Time Delivery Tracking
 Route::get('/orders', [OrderController::class, 'index']);
 Route::post('/orders', [OrderController::class, 'store']);
 Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
+Route::get('/orders/{id}/delivery', [OrderController::class, 'getDeliveryStatus']);
+Route::post('/orders/{id}/delivery-location', [OrderController::class, 'updateDeliveryLocation']);
 Route::delete('/orders/{id}', [OrderController::class, 'destroy']);
 
 // User Management Routes

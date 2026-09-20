@@ -13,6 +13,9 @@
     "@ant-design/icons": "^6.3.4",
     "antd": "^6.6.4",
     "axios": "^1.20.0",
+    "bakong-khqr": "^1.0.20",
+    "canvas": "^3.2.3",
+    "jsqr": "^1.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

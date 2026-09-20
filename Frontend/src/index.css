@@ -239,3 +239,53 @@ body {
     font-size: 12px !important;
   }
 }
+
+/* Ant Design Select & Dropdown Contrast & Background Styling Fixes */
+.ant-select-selector {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  border-color: #d4d4d4 !important;
+}
+
+.ant-select-selection-item,
+.ant-select-selection-placeholder {
+  color: #111111 !important;
+  font-weight: 600 !important;
+}
+
+.ant-select-arrow {
+  color: #111111 !important;
+}
+
+.ant-select-dropdown {
+  background-color: #ffffff !important;
+  padding: 6px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid #e5e5e5 !important;
+}
+
+.ant-select-item-option {
+  border-radius: 6px !important;
+  color: #111111 !important;
+  font-weight: 600 !important;
+  padding: 8px 12px !important;
+  transition: all 0.15s ease !important;
+}
+
+.ant-select-item-option-hover,
+.ant-select-item-option-active {
+  background-color: #f4f4f5 !important;
+  color: #000000 !important;
+}
+
+.ant-select-item-option-selected {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.ant-select-item-option-selected .ant-select-item-option-content,
+.ant-select-item-option-selected .anticon {
+  color: #ffffff !important;
+}

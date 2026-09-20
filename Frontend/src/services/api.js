@@ -13,54 +13,113 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// Resilient native fetch helper (bypasses buggy browser extension XHR monkey-patches)
+const requestFetch = async (endpoint, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+};
+
 export const fetchCategories = async () => {
   try {
-    const response = await api.get("/categories");
-    return response.data.data;
+    const data = await requestFetch("/categories");
+    if (data && data.data) {
+      try {
+        localStorage.setItem("lx_cached_categories", JSON.stringify(data.data));
+      } catch (e) {}
+      return data.data;
+    }
   } catch (error) {
-    console.error("Error fetching categories:", error);
-    throw error;
+    console.warn("Fetch categories via fetch failed, trying fallback:", error);
+    try {
+      const response = await api.get("/categories");
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+    } catch (e) {}
+    try {
+      const cached = localStorage.getItem("lx_cached_categories");
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
   }
+  return [];
 };
 
 export const createCategory = async (categoryData) => {
   try {
+    return await requestFetch("/categories", {
+      method: "POST",
+      body: JSON.stringify(categoryData),
+    });
+  } catch (error) {
     const response = await api.post("/categories", categoryData);
     return response.data;
-  } catch (error) {
-    console.error("Error creating category:", error);
-    throw error;
   }
 };
 
 export const updateCategory = async (id, categoryData) => {
   try {
+    return await requestFetch(`/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(categoryData),
+    });
+  } catch (error) {
     const response = await api.put(`/categories/${id}`, categoryData);
     return response.data;
-  } catch (error) {
-    console.error(`Error updating category #${id}:`, error);
-    throw error;
   }
 };
 
 export const deleteCategory = async (id) => {
   try {
+    return await requestFetch(`/categories/${id}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
     const response = await api.delete(`/categories/${id}`);
     return response.data;
-  } catch (error) {
-    console.error(`Error deleting category #${id}:`, error);
-    throw error;
   }
 };
 
 export const fetchProducts = async (params = {}) => {
   try {
-    const response = await api.get("/products", { params });
-    return response.data.data;
+    let queryString = "";
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams(params);
+      queryString = `?${searchParams.toString()}`;
+    }
+    const data = await requestFetch(`/products${queryString}`);
+    if (data && data.data) {
+      try {
+        if (!params || Object.keys(params).length === 0) {
+          localStorage.setItem("lx_cached_products", JSON.stringify(data.data));
+        }
+      } catch (e) {}
+      return data.data;
+    }
   } catch (error) {
-    console.error("Error fetching products:", error);
-    throw error;
+    console.warn("Fetch products via fetch failed, trying fallback:", error);
+    try {
+      const response = await api.get("/products", { params });
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+    } catch (e) {}
+    try {
+      const cached = localStorage.getItem("lx_cached_products");
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
   }
+  return [];
 };
 
 export const fetchProductById = async (id) => {
@@ -113,12 +172,29 @@ export const submitOrder = async (orderData) => {
   }
 };
 
-export const fetchOrders = async () => {
+export const fetchOrders = async (userEmail = null) => {
   try {
-    const response = await api.get("/orders");
-    return response.data.data;
+    const url = userEmail ? `/orders?email=${encodeURIComponent(userEmail)}` : "/orders";
+    const response = await api.get(url);
+    if (response.data && response.data.data) {
+      if (userEmail) {
+        try {
+          localStorage.setItem(
+            `lx_cached_orders_${userEmail}`,
+            JSON.stringify(response.data.data),
+          );
+        } catch (e) {}
+      }
+      return response.data.data;
+    }
   } catch (error) {
     console.error("Error fetching orders:", error);
+    if (userEmail) {
+      try {
+        const cached = localStorage.getItem(`lx_cached_orders_${userEmail}`);
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
     throw error;
   }
 };
@@ -144,6 +220,16 @@ export const deleteOrder = async (id) => {
 };
 
 // User Management API Functions
+export const loginUser = async (credentials) => {
+  try {
+    const response = await api.post("/login", credentials);
+    return response.data;
+  } catch (error) {
+    console.error("Error logging in:", error);
+    throw error;
+  }
+};
+
 export const fetchUsers = async () => {
   try {
     const response = await api.get("/users");

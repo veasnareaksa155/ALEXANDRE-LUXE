@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
+use KHQR\BakongKHQR;
+use KHQR\Models\IndividualInfo;
+use KHQR\Helpers\KHQRData;
 
 class BakongPaymentController extends Controller
 {
@@ -24,51 +27,72 @@ class BakongPaymentController extends Controller
         $amount = (float) $validated['amount'];
         $currency = strtoupper($validated['currency'] ?? 'USD');
 
-        // Bakong Merchant Configuration from .env
-        $merchantId = env('BAKONG_MERCHANT_ID', 'alexandre_luxe@acleda');
-        $merchantName = env('BAKONG_MERCHANT_NAME', 'ALEXANDRE LUXE');
-        $storeLabel = env('BAKONG_STORE_LABEL', 'Paris Atelier');
-        $terminal = env('BAKONG_TERMINAL', 'WEB-STORE');
+        // Bakong Configuration from .env
+        $merchantId = env('BAKONG_MERCHANT_ID', 'veasna_reaksa@bkrt');
+        $merchantName = env('BAKONG_MERCHANT_NAME', 'REAKSA VEASNA');
+        $mobileNumber = env('BAKONG_MOBILE_NUMBER', '855885232761');
+        $billNumber = 'LX' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
 
-        // Generate Unique Bill Number and MD5
-        $billNumber = 'BILL-' . $orderId . '-' . time();
-
-        // Standard KHQR Payload structure (Compatible with NBC Bakong Open API / KHQR library)
-        $khqrPayload = [
-            'merchant_id' => $merchantId,
-            'merchant_name' => $merchantName,
-            'store_label' => $storeLabel,
-            'terminal_label' => $terminal,
-            'bill_number' => $billNumber,
-            'amount' => number_format($amount, 2, '.', ''),
-            'currency' => $currency === 'USD' ? '840' : '116', // ISO 4217 code
-        ];
-
-        // Call Bakong Open API if BAKONG_TOKEN is set
-        $bakongApiUrl = env('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh/v1');
+        $expirationTimestamp = (round(microtime(true) * 1000) + (30 * 60 * 1000));
         $bakongToken = env('BAKONG_TOKEN', null);
 
         $qrData = null;
-        $md5Hash = md5($billNumber . $amount . $currency . $merchantId);
+        $md5Hash = null;
 
-        if ($bakongToken) {
-            try {
-                $response = Http::withToken($bakongToken)
-                    ->post("{$bakongApiUrl}/generate_khqr", $khqrPayload);
+        try {
+            $individualInfo = IndividualInfo::withOptionalArray(
+                $merchantId,
+                $merchantName,
+                'PHNOM PENH',
+                [
+                    'currency' => $currency === 'KHR' ? KHQRData::CURRENCY_KHR : KHQRData::CURRENCY_USD,
+                    'amount' => (float) $amount,
+                    'mobileNumber' => $mobileNumber,
+                    'billNumber' => $billNumber,
+                ]
+            );
 
-                if ($response->successful()) {
-                    $resData = $response->json();
-                    $qrData = $resData['data']['qr'] ?? null;
-                    $md5Hash = $resData['data']['md5'] ?? $md5Hash;
-                }
-            } catch (\Exception $e) {
-                Log::warning('Bakong API Call failed, generating standard KHQR string: ' . $e->getMessage());
+            $res = BakongKHQR::generateIndividual($individualInfo);
+
+            if ($res && isset($res->data['qr'])) {
+                $qrData = $res->data['qr'];
+                $md5Hash = $res->data['md5'];
             }
+        } catch (\Exception $e) {
+            Log::warning('BakongKHQR Package Error: ' . $e->getMessage());
         }
 
-        // Fallback standard KHQR String format if API token is sandbox/testing
-        if (!$qrData) {
-            $qrData = "00020101021230380016" . $merchantId . "0112ALEXANDRELUXE5204599953038405404" . number_format($amount, 2, '.', '') . "5802KH5914" . $merchantName . "6006PHNOMPENH62150511" . $billNumber . "6304" . strtoupper(substr(md5($billNumber), 0, 4));
+        if (empty($qrData)) {
+            $qrData = $this->buildEMVCoKHQR($merchantId, $merchantName, $amount, $billNumber, $currency);
+            $md5Hash = md5($qrData);
+        }
+
+        // Generate NBC Bakong Official Deeplink if token is available
+        $deeplink = null;
+        if (!empty($bakongToken) && !empty($qrData)) {
+            try {
+                $baseUrl = rtrim(env('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh'), '/');
+                if (!str_contains($baseUrl, '/v1')) {
+                    $baseUrl .= '/v1';
+                }
+
+                $deepRes = Http::withToken($bakongToken)
+                    ->post("{$baseUrl}/generate_deeplink_by_qr", [
+                        'qr' => $qrData,
+                        'sourceInfo' => [
+                            'appName' => 'Alexandre Luxe',
+                            'appIconUrl' => 'https://alexandre-luxe.onrender.com/favicon.svg',
+                            'appDeepLinkCallback' => 'https://alexandre-luxe.onrender.com'
+                        ]
+                    ]);
+
+                if ($deepRes->successful()) {
+                    $deepData = $deepRes->json();
+                    $deeplink = $deepData['data']['shortLink'] ?? null;
+                }
+            } catch (\Exception $e) {
+                Log::warning('Bakong Deeplink API Error: ' . $e->getMessage());
+            }
         }
 
         return response()->json([
@@ -80,11 +104,99 @@ class BakongPaymentController extends Controller
                 'bill_number' => $billNumber,
                 'md5' => $md5Hash,
                 'qr_string' => $qrData,
+                'deeplink' => $deeplink,
                 'merchant_name' => $merchantName,
                 'merchant_id' => $merchantId,
                 'created_at' => now()->toIso8601String(),
             ]
         ]);
+    }
+
+    /**
+     * Calculate EMVCo CRC16 Checksum (Polynomial 0x1021, Initial 0xFFFF)
+     */
+    private function calculateCRC16($str)
+    {
+        $crc = 0xFFFF;
+        for ($c = 0; $c < strlen($str); $c++) {
+            $crc ^= (ord($str[$c]) << 8);
+            for ($i = 0; $i < 8; $i++) {
+                if ($crc & 0x8000) {
+                    $crc = (($crc << 1) ^ 0x1021) & 0xFFFF;
+                } else {
+                    $crc = ($crc << 1) & 0xFFFF;
+                }
+            }
+        }
+        return strtoupper(str_pad(dechex($crc), 4, '0', STR_PAD_LEFT));
+    }
+
+    /**
+     * Generate 100% EMVCo & NBC Compliant Dynamic Bakong KHQR String
+     */
+    private function buildEMVCoKHQR($merchantId, $merchantName, $amount, $billNumber, $currency = 'USD')
+    {
+        $merchantIdClean = trim($merchantId); // e.g. veasna_reaksa@bkrt
+        $isKhr = strtoupper($currency) === 'KHR';
+
+        $merchantNameClean = substr(preg_replace('/[^A-Za-z0-9 ]/', '', $merchantName), 0, 25);
+        if (empty($merchantNameClean)) {
+            $merchantNameClean = "REAKSA VEASNA";
+        }
+
+        // Tag 29 (Individual Bakong Account Tag for personal Bakong Account IDs like veasna_reaksa@bkrt)
+        $subtag00_29 = "00" . str_pad(strlen($merchantIdClean), 2, '0', STR_PAD_LEFT) . $merchantIdClean;
+        $tag29Value = $subtag00_29;
+        $tag29 = "29" . str_pad(strlen($tag29Value), 2, '0', STR_PAD_LEFT) . $tag29Value;
+
+        // Tag 30 (Merchant Bakong Account Tag)
+        $subtag00_30 = "00" . str_pad(strlen($merchantIdClean), 2, '0', STR_PAD_LEFT) . $merchantIdClean;
+        $tag30Value = $subtag00_30;
+        $tag30 = "30" . str_pad(strlen($tag30Value), 2, '0', STR_PAD_LEFT) . $tag30Value;
+
+        // Tag 52: MCC
+        $tag52 = "52045999";
+
+        // Tag 53: Currency (840 = USD, 116 = KHR)
+        $currencyCode = $isKhr ? '116' : '840';
+        $tag53 = "5303" . $currencyCode;
+
+        // Tag 54: Amount (USD requires 2 decimal places e.g. 280.00, KHR is integer)
+        $formattedAmount = $isKhr ? (string) round((float) $amount) : number_format((float) $amount, 2, '.', '');
+        $tag54 = "54" . str_pad(strlen($formattedAmount), 2, '0', STR_PAD_LEFT) . $formattedAmount;
+
+        // Tag 58: Country Code
+        $tag58 = "5802KH";
+
+        // Tag 59: Account Name
+        $tag59 = "59" . str_pad(strlen($merchantNameClean), 2, '0', STR_PAD_LEFT) . $merchantNameClean;
+
+        // Tag 60: City
+        $tag60 = "6010PHNOM PENH";
+
+        // Tag 62: Additional Data Field (Bill Number & Mobile Number)
+        $mobileNumber = env('BAKONG_MOBILE_NUMBER', '855885232761');
+        $subtag62_01 = "01" . str_pad(strlen($billNumber), 2, '0', STR_PAD_LEFT) . $billNumber;
+        $subtag62_02 = !empty($mobileNumber) ? "02" . str_pad(strlen($mobileNumber), 2, '0', STR_PAD_LEFT) . $mobileNumber : "";
+        $subtag62Val = $subtag62_01 . $subtag62_02;
+        $tag62 = "62" . str_pad(strlen($subtag62Val), 2, '0', STR_PAD_LEFT) . $subtag62Val;
+
+        // Tag 99: Dynamic KHQR Timestamps (Creation & Expiration Timestamps in MS)
+        $nowMs = (string) round(microtime(true) * 1000);
+        $expMs = (string) (round(microtime(true) * 1000) + (30 * 60 * 1000));
+        $subtag99_00 = "00" . str_pad(strlen($nowMs), 2, '0', STR_PAD_LEFT) . $nowMs;
+        $subtag99_01 = "01" . str_pad(strlen($expMs), 2, '0', STR_PAD_LEFT) . $expMs;
+        $tag99Val = $subtag99_00 . $subtag99_01;
+        $tag99 = "99" . str_pad(strlen($tag99Val), 2, '0', STR_PAD_LEFT) . $tag99Val;
+
+        // Account Tag selection: Tag 29 for Individual (@bkrt), Tag 30 for Merchant ID
+        $accountTag = (strpos($merchantIdClean, '@') !== false) ? $tag29 : $tag30;
+        $basePayload = "000201010212" . $accountTag . $tag52 . $tag53 . $tag54 . $tag58 . $tag59 . $tag60 . $tag62 . $tag99 . "6304";
+
+        // Calculate valid CRC16 checksum
+        $crc = $this->calculateCRC16($basePayload);
+
+        return $basePayload . $crc;
     }
 
     /**
@@ -97,22 +209,24 @@ class BakongPaymentController extends Controller
             'order_id' => 'nullable',
         ]);
 
-        $md5 = $validated['md5'];
-        $bakongApiUrl = env('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh/v1');
+        $baseUrl = rtrim(env('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh'), '/');
+        if (!str_contains($baseUrl, '/v1')) {
+            $baseUrl .= '/v1';
+        }
         $bakongToken = env('BAKONG_TOKEN', null);
 
         if ($bakongToken) {
             try {
                 $response = Http::withToken($bakongToken)
-                    ->post("{$bakongApiUrl}/check_transaction_by_md5", [
+                    ->post("{$baseUrl}/check_transaction_by_md5", [
                         'md5' => $md5
                     ]);
 
                 if ($response->successful()) {
                     $resData = $response->json();
-                    $responseCode = $resData['responseCode'] ?? 1;
+                    $responseCode = $resData['responseCode'] ?? ($resData['status']['code'] ?? 1);
 
-                    if ($responseCode === 0) {
+                    if ($responseCode === 0 || $responseCode === '0' || (isset($resData['data']) && !empty($resData['data']))) {
                         // Payment confirmed on Bakong Network!
                         if (!empty($validated['order_id'])) {
                             $order = Order::find($validated['order_id']);
@@ -136,7 +250,6 @@ class BakongPaymentController extends Controller
             }
         }
 
-        // Return current status (simulated success for testing mode if token missing)
         return response()->json([
             'status' => 'success',
             'paid' => false,
@@ -166,4 +279,3 @@ class BakongPaymentController extends Controller
         return response()->json(['status' => 'acknowledged']);
     }
 }
-

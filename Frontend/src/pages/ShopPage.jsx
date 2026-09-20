@@ -76,6 +76,9 @@ const ShopPage = ({
       <div className="pt-6">
         <CategoryBar
           categories={categories}
+          products={products}
+          wishlistItems={wishlistItems}
+          onQuickView={onQuickView}
           activeCategory={activeCategory}
           onSelectCategory={onSelectCategory}
           searchQuery={searchQuery}

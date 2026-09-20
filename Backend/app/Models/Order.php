@@ -19,10 +19,19 @@ class Order extends Model
         'payment_method',
         'total_amount',
         'status',
+        'delivery_status',
+        'courier_name',
+        'courier_phone',
+        'driver_lat',
+        'driver_lng',
+        'estimated_minutes',
     ];
 
     protected $casts = [
         'total_amount' => 'float',
+        'driver_lat' => 'float',
+        'driver_lng' => 'float',
+        'estimated_minutes' => 'integer',
     ];
 
     public function items(): HasMany
@@ -30,4 +39,3 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 }
-
