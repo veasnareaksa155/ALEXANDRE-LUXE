@@ -35,10 +35,16 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
       const userData = {
         id: apiUser.id || Date.now(),
         role: sessionRole,
-        name: apiUser.name || (values.email ? values.email.split("@")[0].toUpperCase() : "VIP CLIENT"),
+        name:
+          apiUser.name ||
+          (values.email
+            ? values.email.split("@")[0].toUpperCase()
+            : "VIP CLIENT"),
         email: apiUser.email || values.email,
         tier: apiUser.tier || "BLACK DIAMOND VIP",
-        memberSince: apiUser.created_at ? new Date(apiUser.created_at).getFullYear().toString() : "2026",
+        memberSince: apiUser.created_at
+          ? new Date(apiUser.created_at).getFullYear().toString()
+          : "2026",
         phone: apiUser.phone || "",
         address: apiUser.address || "",
         avatar: apiUser.avatar || null,

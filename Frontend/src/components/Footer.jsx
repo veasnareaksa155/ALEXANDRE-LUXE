@@ -32,14 +32,14 @@ const Footer = ({ onSelectCategory, onNavigatePage }) => {
             >
               <img
                 src="/images/LOGO.png"
-                alt="Alexandre Luxe"
+                alt="Legacy Store"
                 className="h-10 sm:h-12 w-auto filter invert brightness-200 object-contain"
                 onError={(e) => {
                   e.target.style.display = "none";
                 }}
               />
               <span className="font-serif text-lg sm:text-xl lg:text-2xl tracking-wider font-extrabold text-white uppercase whitespace-nowrap">
-                ALEXANDRE LUXE
+                LEGACY STORE
               </span>
             </div>
             <p className="text-sm text-neutral-300 leading-relaxed font-normal mb-6 max-w-sm">
@@ -123,7 +123,7 @@ const Footer = ({ onSelectCategory, onNavigatePage }) => {
                   onClick={() => handlePageNav("about")}
                   className="hover:text-white transition-colors text-left"
                 >
-                  About Alexandre Luxe
+                  About Legacy Store
                 </button>
               </li>
               <li>
@@ -184,7 +184,7 @@ const Footer = ({ onSelectCategory, onNavigatePage }) => {
         {/* Bottom Copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-neutral-400 font-mono font-medium">
           <p>
-            &copy; {new Date().getFullYear()} ALEXANDRE LUXE. ALL RIGHTS
+            &copy; {new Date().getFullYear()} LEGACY STORE. ALL RIGHTS
             RESERVED.
           </p>
           <div className="flex space-x-6 mt-4 sm:mt-0">

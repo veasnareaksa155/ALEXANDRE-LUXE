@@ -266,7 +266,7 @@ const DeliveryTrackingModal = ({
               <ShopOutlined className="text-xs" />
             </div>
             <span className="bg-black/90 text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded mt-1 shadow uppercase tracking-wider">
-              ALEXANDRE MAISON
+              LEGACY STORE MAISON
             </span>
           </div>
 

@@ -376,7 +376,7 @@ const AdminDashboardPage = ({
 
   // Store Settings State
   const [storeSettings, setStoreSettings] = useState({
-    storeName: "ALEXANDRE LUXE",
+    storeName: "LEGACY STORE",
     freeShippingThreshold: 200,
     currencySymbol: "$",
     maintenanceMode: false,

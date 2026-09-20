@@ -174,7 +174,9 @@ export const submitOrder = async (orderData) => {
 
 export const fetchOrders = async (userEmail = null) => {
   try {
-    const url = userEmail ? `/orders?email=${encodeURIComponent(userEmail)}` : "/orders";
+    const url = userEmail
+      ? `/orders?email=${encodeURIComponent(userEmail)}`
+      : "/orders";
     const response = await api.get(url);
     if (response.data && response.data.data) {
       if (userEmail) {

@@ -70,8 +70,7 @@ const Navbar = ({
         {/* Top Announcement Banner (Desktop / Tablet) */}
         <div className="hidden sm:block bg-black text-white text-xs py-2 px-4 text-center font-medium tracking-widest uppercase">
           <span>
-            ✨ Free Worldwide Express Shipping on Orders Over $200 | Alexandre
-            Luxe
+            ✨ Free Worldwide Express Shipping on Orders Over $200 | Legacy Store
           </span>
         </div>
 
@@ -91,14 +90,14 @@ const Navbar = ({
               <MenuOutlined style={{ fontSize: "18px" }} />
             </button>
 
-            {/* Center: Centered Alexandre Luxe Logo */}
+            {/* Center: Centered Legacy Store Logo */}
             <div
               className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center cursor-pointer"
               onClick={handleHomeClick}
             >
               <img
                 src="/images/LOGO.png"
-                alt="Alexandre Luxe"
+                alt="Legacy Store"
                 className="h-9 w-auto object-contain"
                 onError={(e) => {
                   e.target.style.display = "none";
@@ -106,7 +105,7 @@ const Navbar = ({
                 }}
               />
               <span className="hidden font-serif text-lg tracking-widest uppercase font-bold text-black whitespace-nowrap">
-                ALEXANDRE LUXE
+                LEGACY STORE
               </span>
             </div>
 
@@ -199,7 +198,7 @@ const Navbar = ({
             >
               <img
                 src="/images/LOGO.png"
-                alt="Alexandre Luxe"
+                alt="Legacy Store"
                 className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 hover:scale-105"
                 onError={(e) => {
                   e.target.style.display = "none";
@@ -207,7 +206,7 @@ const Navbar = ({
                 }}
               />
               <span className="hidden font-serif text-xl sm:text-2xl tracking-widest uppercase font-bold text-black whitespace-nowrap">
-                ALEXANDRE LUXE
+                LEGACY STORE
               </span>
             </div>
 

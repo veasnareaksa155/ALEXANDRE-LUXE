@@ -44,8 +44,8 @@ class UserController extends Controller
 
         // Auto-create user if logging in for first time with valid details
         $role = str_contains(strtolower($validated['email']), 'admin') ? 'admin' : 'user';
-        $name = str_contains($validated['email'], '@') 
-            ? ucwords(str_replace(['.', '_'], ' ', explode('@', $validated['email'])[0])) 
+        $name = str_contains($validated['email'], '@')
+            ? ucwords(str_replace(['.', '_'], ' ', explode('@', $validated['email'])[0]))
             : 'Alexandre Client';
 
         $user = User::create([
