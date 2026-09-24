@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Modal, Rate, message } from "antd";
+import { parseGalleryUrls } from "../services/cloudinary";
 import {
   ShoppingOutlined,
   CloseOutlined,
@@ -97,185 +98,43 @@ const ProductDetailModal = ({
     return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80";
   }, [product, selectedColor]);
 
-  // Multi-angle gallery array (Front, Back, Left, Right, Detail, Model)
+  // Dynamic user-uploaded multi-angle gallery array (Front + Gallery Angle Images)
   const productAngleGallery = useMemo(() => {
     if (!product) return [];
-    const cat = (product?.category?.name || "").toLowerCase();
-    const name = (product?.name || "").toLowerCase();
-    const col = (selectedColor || product?.colors?.[0] || "").toLowerCase();
     const mainImg = product.image_url;
 
-    const isWhite = col.includes("white") || name.includes("white");
-    const isGrey =
-      col.includes("grey") ||
-      col.includes("gray") ||
-      col.includes("charcoal") ||
-      name.includes("charcoal") ||
-      name.includes("grey");
+    // 1. Safely extract all user-uploaded gallery URLs using parseGalleryUrls helper
+    const galleryUrls = parseGalleryUrls(product.gallery);
 
-    let items = [];
+    const items = [];
 
-    if (
-      cat.includes("t-shirt") ||
-      cat.includes("tee") ||
-      name.includes("tee") ||
-      name.includes("t-shirt")
-    ) {
-      if (isWhite) {
-        items = [
-          { id: "front", label: "FRONT", url: mainImg },
-          {
-            id: "back",
-            label: "BACK",
-            url: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: "side",
-            label: "SIDE",
-            url: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
-          },
-          { id: "detail", label: "FABRIC DETAIL", url: mainImg, isZoom: true },
-          { id: "model", label: "MODEL FIT", url: modelImage },
-        ];
-      } else if (isGrey) {
-        items = [
-          { id: "front", label: "FRONT", url: mainImg },
-          {
-            id: "back",
-            label: "BACK",
-            url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: "side",
-            label: "SIDE",
-            url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80",
-          },
-          { id: "detail", label: "FABRIC DETAIL", url: mainImg, isZoom: true },
-          { id: "model", label: "MODEL FIT", url: modelImage },
-        ];
-      } else {
-        items = [
-          { id: "front", label: "FRONT", url: mainImg },
-          {
-            id: "back",
-            label: "BACK",
-            url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: "side",
-            label: "SIDE",
-            url: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=800&q=80",
-          },
-          { id: "detail", label: "FABRIC DETAIL", url: mainImg, isZoom: true },
-          { id: "model", label: "MODEL FIT", url: modelImage },
-        ];
-      }
-    } else if (
-      cat.includes("shirt") ||
-      cat.includes("suit") ||
-      name.includes("shirt") ||
-      name.includes("suit")
-    ) {
-      if (isWhite) {
-        items = [
-          { id: "front", label: "FRONT", url: mainImg },
-          {
-            id: "back",
-            label: "BACK",
-            url: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: "side",
-            label: "COLLAR SHOT",
-            url: mainImg,
-            isZoom: true,
-          },
-          { id: "detail", label: "SEAM DETAIL", url: mainImg, isZoom: true },
-          { id: "model", label: "MODEL FIT", url: modelImage },
-        ];
-      } else {
-        items = [
-          { id: "front", label: "FRONT", url: mainImg },
-          {
-            id: "back",
-            label: "BACK",
-            url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: "side",
-            label: "SLEEVE SHOT",
-            url: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?auto=format&fit=crop&w=800&q=80",
-          },
-          { id: "detail", label: "WEAVE DETAIL", url: mainImg, isZoom: true },
-          { id: "model", label: "MODEL FIT", url: modelImage },
-        ];
-      }
-    } else if (
-      cat.includes("shoe") ||
-      cat.includes("footwear") ||
-      name.includes("shoe") ||
-      name.includes("sneaker")
-    ) {
-      if (isWhite) {
-        items = [
-          { id: "front", label: "FRONT", url: mainImg },
-          {
-            id: "side",
-            label: "PROFILE SIDE",
-            url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: "back",
-            label: "HEEL BACK",
-            url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80",
-          },
-          { id: "detail", label: "LEATHER DETAIL", url: mainImg, isZoom: true },
-          { id: "model", label: "ON-FEET FIT", url: modelImage },
-        ];
-      } else {
-        items = [
-          { id: "front", label: "FRONT", url: mainImg },
-          {
-            id: "side",
-            label: "PROFILE SIDE",
-            url: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: "back",
-            label: "HEEL BACK",
-            url: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
-          },
-          { id: "detail", label: "SOLE DETAIL", url: mainImg, isZoom: true },
-          { id: "model", label: "ON-FEET FIT", url: modelImage },
-        ];
-      }
-    } else {
-      items = [
-        { id: "front", label: "FRONT", url: mainImg },
-        { id: "side", label: "SIDE VIEW", url: mainImg },
-        { id: "detail", label: "HARDWARE DETAIL", url: mainImg, isZoom: true },
-        { id: "model", label: "MODEL FIT", url: modelImage },
-      ];
+    if (mainImg) {
+      items.push({ id: "front", label: "COVER PHOTO", url: mainImg });
     }
 
-    if (
-      product.gallery &&
-      Array.isArray(product.gallery) &&
-      product.gallery.length > 0
-    ) {
-      product.gallery.forEach((gUrl, idx) => {
-        if (!items.some((it) => it.url === gUrl)) {
-          items.push({
-            id: `gal-${idx}`,
-            label: `ANGLE ${idx + 2}`,
-            url: gUrl,
-          });
-        }
+    // Add all uploaded gallery angle images cleanly
+    galleryUrls.forEach((gUrl, idx) => {
+      if (gUrl && gUrl !== mainImg && !items.some((it) => it.url === gUrl)) {
+        items.push({
+          id: `angle-${idx + 1}`,
+          label: `ANGLE ${idx + 2}`,
+          url: gUrl,
+        });
+      }
+    });
+
+    // Fallback zoom angle if only cover photo exists
+    if (items.length === 1 && mainImg) {
+      items.push({
+        id: "detail",
+        label: "FABRIC DETAIL",
+        url: mainImg,
+        isZoom: true,
       });
     }
 
     return items;
-  }, [product, selectedColor, modelImage]);
+  }, [product]);
 
   useEffect(() => {
     if (product) {
@@ -601,7 +460,7 @@ const ProductDetailModal = ({
             {/* Category & Top Badge */}
             <div className="flex items-center justify-between mb-1 pr-6">
               <span className="text-[10px] sm:text-xs font-bold text-neutral-400 uppercase tracking-widest">
-                {product.category?.name || "ALEXANDRE LUXE"}
+                {product.category?.name || "LEGACY"}
               </span>
             </div>
 
@@ -851,7 +710,13 @@ const ProductDetailModal = ({
                 {quantity}
               </span>
               <button
-                onClick={() => setQuantity((q) => q + 1)}
+                onClick={() => {
+                  const maxStock =
+                    product?.stock !== undefined && product?.stock !== null
+                      ? Number(product.stock)
+                      : 50;
+                  setQuantity((q) => Math.min(maxStock, q + 1));
+                }}
                 className="w-5.5 sm:w-6.5 md:w-7.5 h-full flex items-center justify-center font-bold text-xs md:text-sm hover:bg-neutral-200 transition-colors cursor-pointer"
               >
                 +

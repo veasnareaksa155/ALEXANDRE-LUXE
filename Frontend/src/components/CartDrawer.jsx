@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Button, Input, Progress, Empty, Checkbox } from "antd";
+import {
+  Drawer,
+  Button,
+  Input,
+  Progress,
+  Empty,
+  Checkbox,
+  notification,
+} from "antd";
 import {
   DeleteOutlined,
   ShoppingOutlined,
@@ -9,6 +17,7 @@ import {
   TagOutlined,
   StarFilled,
 } from "@ant-design/icons";
+import { getDeliverySettings } from "../services/deliverySettings";
 
 const CartDrawer = ({
   open,
@@ -21,6 +30,7 @@ const CartDrawer = ({
 }) => {
   const [promoCode, setPromoCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedPromoObj, setAppliedPromoObj] = useState(null);
   const [selectedKeys, setSelectedKeys] = useState([]);
 
   // Reset selected keys when drawer opens or cartItems change
@@ -65,22 +75,79 @@ const CartDrawer = ({
     setSelectedKeys([]);
   };
 
+  const deliverySettings = getDeliverySettings();
+  const freeShippingThreshold = Number(
+    deliverySettings.freeShippingThreshold || 50,
+  );
+  const standardFee = Number(deliverySettings.standardDeliveryFee ?? 2);
+
   const subtotal = cartItems.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
     0,
   );
   const totalItemCount = cartItems.reduce((acc, i) => acc + i.quantity, 0);
-  const freeShippingThreshold = 200;
   const progressPercent = Math.min(
     100,
     Math.round((subtotal / freeShippingThreshold) * 100),
   );
 
   const handleApplyPromo = () => {
-    if (promoCode.trim().toUpperCase() === "LUXE10") {
-      setDiscountAmount(subtotal * 0.1);
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+
+    if (code === "LUXE10") {
+      const disc = subtotal * 0.1;
+      setDiscountAmount(disc);
+      const promoObj = { code, discountPercent: 10, discountAmount: disc };
+      setAppliedPromoObj(promoObj);
+      notification.success({
+        message: "Promo Code Applied!",
+        description: `Code "LUXE10" applied successfully! Saved $${disc.toFixed(2)} (10% OFF).`,
+        placement: "bottomRight",
+      });
+    } else if (code === "WELCOME20") {
+      const disc = subtotal * 0.2;
+      setDiscountAmount(disc);
+      const promoObj = { code, discountPercent: 20, discountAmount: disc };
+      setAppliedPromoObj(promoObj);
+      notification.success({
+        message: "Promo Code Applied!",
+        description: `Code "WELCOME20" applied successfully! Saved $${disc.toFixed(2)} (20% OFF).`,
+        placement: "bottomRight",
+      });
+    } else if (code === "VIP15") {
+      const disc = subtotal * 0.15;
+      setDiscountAmount(disc);
+      const promoObj = { code, discountPercent: 15, discountAmount: disc };
+      setAppliedPromoObj(promoObj);
+      notification.success({
+        message: "Promo Code Applied!",
+        description: `Code "VIP15" applied successfully! Saved $${disc.toFixed(2)} (15% OFF).`,
+        placement: "bottomRight",
+      });
+    } else if (code === "FREESHIP") {
+      setDiscountAmount(0);
+      const promoObj = {
+        code,
+        discountPercent: 0,
+        discountAmount: 0,
+        isFreeShip: true,
+      };
+      setAppliedPromoObj(promoObj);
+      notification.success({
+        message: "Promo Code Applied!",
+        description: `Code "FREESHIP" applied! Free Delivery unlocked.`,
+        placement: "bottomRight",
+      });
     } else {
       setDiscountAmount(0);
+      setAppliedPromoObj(null);
+      notification.error({
+        message: "Invalid Promo Code",
+        description:
+          "Code not recognized. Valid promo codes: LUXE10, WELCOME20, VIP15, FREESHIP.",
+        placement: "bottomRight",
+      });
     }
   };
 
@@ -179,8 +246,9 @@ const CartDrawer = ({
                 }
               />
               <Button
+                type="primary"
                 onClick={onClose}
-                className="mt-4 bg-black text-white hover:!bg-neutral-800 font-bold text-xs uppercase tracking-widest h-9 px-6 rounded-lg border-none shadow-sm"
+                className="mt-4 bg-black text-white hover:!bg-neutral-800 hover:!text-white font-bold text-xs uppercase tracking-widest h-10 px-6 rounded-lg border-none shadow-sm transition-all duration-200 cursor-pointer"
               >
                 DISCOVER COLLECTION
               </Button>
@@ -191,40 +259,50 @@ const CartDrawer = ({
               const isChecked = selectedKeys.includes(key);
 
               return (
-                <div key={key} className="py-3 flex gap-3 items-center group">
-                  {/* Selection Checkbox */}
-                  <Checkbox
-                    checked={isChecked}
-                    onChange={(e) => handleItemSelect(key, e.target.checked)}
-                  />
+                <div
+                  key={key}
+                  className="py-3 flex gap-3.5 items-stretch group border-b border-neutral-100/80 last:border-none"
+                >
+                  {/* Selection Checkbox (Vertically Centered in Equal Height Row) */}
+                  <div className="flex items-center justify-center self-center shrink-0 my-auto">
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={(e) => handleItemSelect(key, e.target.checked)}
+                      className="flex items-center justify-center m-0 p-0 [&_.ant-checkbox]:top-0"
+                    />
+                  </div>
 
-                  {/* Product Thumbnail */}
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-16 h-20 object-cover rounded-lg bg-neutral-100 border border-neutral-200/80 shadow-2xs group-hover:scale-102 transition-transform"
-                  />
+                  {/* Product Thumbnail Container (Height Equals Details Column Height) */}
+                  <div className="w-20 rounded-xl bg-neutral-100 border border-neutral-200/80 overflow-hidden shrink-0 self-stretch flex items-center justify-center shadow-2xs">
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
 
-                  {/* Product Details */}
+                  {/* Product Details (Defines Equal Row Height) */}
                   <div className="flex-1 flex flex-col justify-between py-0.5">
                     <div>
-                      <div className="flex justify-between items-start gap-1">
-                        <h4 className="text-xs font-serif font-bold text-neutral-900 uppercase line-clamp-1 tracking-wide">
+                      {/* Title & Delete Icon Row */}
+                      <div className="flex justify-between items-center gap-1 mb-1">
+                        <h4 className="text-xs font-serif font-bold text-neutral-900 uppercase line-clamp-1 tracking-wide m-0 leading-none">
                           {item.name}
                         </h4>
                         <button
                           onClick={() =>
                             onRemoveItem(item.id, item.size, item.color)
                           }
-                          className="text-neutral-400 hover:text-red-600 transition-colors p-0.5 cursor-pointer"
+                          className="text-neutral-400 hover:text-red-600 transition-colors p-0.5 cursor-pointer flex items-center justify-center"
                           title="Remove item"
                         >
                           <DeleteOutlined className="text-xs" />
                         </button>
                       </div>
 
-                      <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-mono mt-0.5">
-                        <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+                      {/* Rating & Size/Color Badges */}
+                      <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 font-mono flex-wrap">
+                        <div className="flex items-center gap-0.5 text-amber-500 font-bold bg-amber-50/80 px-1.5 py-0.5 rounded border border-amber-200/60">
                           <StarFilled
                             style={{ color: "#fbbf24" }}
                             className="text-[10px]"
@@ -246,15 +324,17 @@ const CartDrawer = ({
                         )}
                       </div>
 
+                      {/* Unit Price */}
                       <div className="text-xs font-extrabold text-black font-mono mt-1">
                         ${Number(item.price).toFixed(2)}
                       </div>
                     </div>
 
                     {/* Quantity Controls & Line Total */}
-                    <div className="flex items-center justify-between mt-2 pt-1 border-t border-neutral-100/80">
-                      <div className="flex items-center border border-neutral-200 rounded-md overflow-hidden bg-neutral-50">
+                    <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-neutral-100">
+                      <div className="inline-flex items-center border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50 shadow-2xs">
                         <button
+                          type="button"
                           onClick={() =>
                             onUpdateQuantity(
                               item.id,
@@ -263,14 +343,15 @@ const CartDrawer = ({
                               item.quantity - 1,
                             )
                           }
-                          className="w-6 h-6 text-xs font-bold text-neutral-600 hover:bg-neutral-200 hover:text-black transition-colors"
+                          className="w-7 h-7 flex items-center justify-center text-xs font-bold text-neutral-600 hover:bg-neutral-200 hover:text-black transition-colors leading-none cursor-pointer"
                         >
                           -
                         </button>
-                        <span className="px-2.5 text-xs font-bold font-mono text-black">
+                        <span className="px-3 text-xs font-bold font-mono text-black flex items-center justify-center leading-none select-none">
                           {item.quantity}
                         </span>
                         <button
+                          type="button"
                           onClick={() =>
                             onUpdateQuantity(
                               item.id,
@@ -279,13 +360,13 @@ const CartDrawer = ({
                               item.quantity + 1,
                             )
                           }
-                          className="w-6 h-6 text-xs font-bold text-neutral-600 hover:bg-neutral-200 hover:text-black transition-colors"
+                          className="w-7 h-7 flex items-center justify-center text-xs font-bold text-neutral-600 hover:bg-neutral-200 hover:text-black transition-colors leading-none cursor-pointer"
                         >
                           +
                         </button>
                       </div>
 
-                      <span className="text-xs font-black text-black font-mono">
+                      <span className="text-xs font-black text-black font-mono self-center">
                         ${(Number(item.price) * item.quantity).toFixed(2)}
                       </span>
                     </div>
@@ -300,21 +381,46 @@ const CartDrawer = ({
         {cartItems.length > 0 && (
           <div className="pt-3 border-t border-neutral-200/90 mt-2 bg-white space-y-2.5">
             {/* Promo Code Input Box */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center w-full">
               <Input
                 prefix={<TagOutlined className="text-neutral-400 text-xs" />}
                 placeholder="Promo Code (Try LUXE10)"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
-                className="text-xs uppercase h-8 rounded-lg"
+                className="text-xs uppercase !h-9 rounded-lg flex-1 border-neutral-300 focus:border-black flex items-center my-0"
               />
-              <Button
+              <button
+                type="button"
                 onClick={handleApplyPromo}
-                className="bg-black hover:!bg-neutral-800 text-white text-xs font-bold uppercase h-8 px-4 rounded-lg border-none"
+                className="bg-black hover:bg-neutral-800 text-white text-xs font-extrabold tracking-wider uppercase h-9 px-5 rounded-lg border-none flex items-center justify-center shrink-0 cursor-pointer transition-colors shadow-2xs my-0 leading-none"
               >
                 APPLY
-              </Button>
+              </button>
             </div>
+
+            {/* Applied Promo Banner */}
+            {appliedPromoObj && (
+              <div className="flex justify-between items-center text-[10px] text-emerald-800 font-mono font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                <span>
+                  🎉 APPLIED: {appliedPromoObj.code} (
+                  {appliedPromoObj.isFreeShip
+                    ? "FREE SHIPPING"
+                    : `${appliedPromoObj.discountPercent}% OFF`}
+                  )
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPromoCode("");
+                    setDiscountAmount(0);
+                    setAppliedPromoObj(null);
+                  }}
+                  className="text-neutral-500 hover:text-red-600 font-bold uppercase underline cursor-pointer ml-1"
+                >
+                  REMOVE
+                </button>
+              </div>
+            )}
 
             {/* Price Calculations Summary */}
             <div className="bg-neutral-50 p-2.5 rounded-xl border border-neutral-200/70 space-y-1 text-xs font-mono">
@@ -326,17 +432,20 @@ const CartDrawer = ({
               </div>
               {discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-600 font-bold">
-                  <span>Discount (10% OFF):</span>
+                  <span>
+                    Discount ({appliedPromoObj?.discountPercent}% OFF):
+                  </span>
                   <span>-${discountAmount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-neutral-600">
                 <span>Estimated Shipping:</span>
                 <span className="font-bold text-black">
-                  {subtotal >= freeShippingThreshold ? (
-                    <span className="text-emerald-700">FREE</span>
+                  {appliedPromoObj?.isFreeShip ||
+                  subtotal >= freeShippingThreshold ? (
+                    <span className="text-emerald-700 font-bold">FREE</span>
                   ) : (
-                    "$15.00"
+                    `$${standardFee.toFixed(2)}`
                   )}
                 </span>
               </div>
@@ -345,7 +454,11 @@ const CartDrawer = ({
                 <span className="text-base text-black">
                   $
                   {(
-                    finalTotal + (subtotal >= freeShippingThreshold ? 0 : 15)
+                    finalTotal +
+                    (appliedPromoObj?.isFreeShip ||
+                    subtotal >= freeShippingThreshold
+                      ? 0
+                      : standardFee)
                   ).toFixed(2)}
                 </span>
               </div>
@@ -355,7 +468,7 @@ const CartDrawer = ({
             <div className="flex justify-end pt-0.5">
               <Button
                 type="primary"
-                onClick={onProceedToCheckout}
+                onClick={() => onProceedToCheckout(appliedPromoObj)}
                 icon={<ArrowRightOutlined />}
                 iconPosition="end"
                 className="w-full bg-black hover:!bg-neutral-800 text-white font-extrabold text-xs tracking-widest uppercase h-9 rounded-lg shadow-md border-none transition-all cursor-pointer"

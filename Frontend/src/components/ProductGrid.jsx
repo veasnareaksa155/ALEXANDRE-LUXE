@@ -31,13 +31,13 @@ const ProductGrid = ({
   return (
     <section
       id="products-section"
-      className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12"
+      className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12 scroll-reveal"
     >
       {/* Section Header Controls */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 border-b border-neutral-200">
         <div>
           <span className="text-[10px] sm:text-xs font-bold text-neutral-400 uppercase tracking-widest block mb-1">
-            ALEXANDRE LUXE CATALOGUE
+            LEGACY CATALOGUE
           </span>
           <h2 className="text-xl sm:text-3xl font-bold font-serif text-black uppercase tracking-tight">
             {getCategoryTitle()}
@@ -95,6 +95,7 @@ const ProductGrid = ({
         </div>
       ) : (
         <Row
+          className="scroll-reveal-stagger"
           gutter={[
             { xs: 12, sm: 16, md: 24 },
             { xs: 16, sm: 20, md: 32 },

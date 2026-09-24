@@ -28,6 +28,19 @@ class OrderController extends Controller
         $orderNumber = 'LX-' . strtoupper(Str::random(8));
         $totalAmount = 0;
 
+        // Validate stock availability for all items first
+        foreach ($validated['items'] as $itemData) {
+            $product = \App\Models\Product::find($itemData['product_id']);
+            if ($product && $product->stock !== null) {
+                if ($product->stock < $itemData['quantity']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient stock for '{$product->name}'. Only {$product->stock} items left in stock.",
+                    ], 422);
+                }
+            }
+        }
+
         $order = Order::create([
             'order_number' => $orderNumber,
             'customer_name' => $validated['customer_name'],
@@ -63,9 +76,19 @@ class OrderController extends Controller
                 'size' => $itemData['size'] ?? null,
                 'color' => $itemData['color'] ?? null,
             ]);
+
+            // Decrement inventory stock for purchased items
+            if ($product->stock !== null) {
+                $product->stock = max(0, $product->stock - $itemData['quantity']);
+                $product->save();
+            }
         }
 
-        $order->update(['total_amount' => $totalAmount]);
+        $finalTotal = $request->has('total_amount') && is_numeric($request->total_amount)
+            ? floatval($request->total_amount)
+            : $totalAmount;
+
+        $order->update(['total_amount' => $finalTotal]);
 
         return response()->json([
             'success' => true,

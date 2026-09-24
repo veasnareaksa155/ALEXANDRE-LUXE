@@ -31,9 +31,18 @@ const Navbar = ({
   onOpenAuthModal,
   onLogout,
   onOpenDeliveryTracking,
+  hasPaidOrder = false,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchMobile, setShowSearchMobile] = useState(false);
+  const [navSearch, setNavSearch] = useState(searchQuery || "");
+
+  // Sync navSearch if searchQuery is cleared externally
+  React.useEffect(() => {
+    if (!searchQuery) {
+      setNavSearch("");
+    }
+  }, [searchQuery]);
 
   const handleHomeClick = () => {
     onNavigatePage("home");
@@ -58,10 +67,17 @@ const Navbar = ({
 
   const handleSearchInputChange = (e) => {
     const val = e.target.value;
+    setNavSearch(val);
     onSearchChange(val);
     if (val && activePage !== "shop") {
       onNavigatePage("shop");
     }
+  };
+
+  const handleClearNavbarSearch = () => {
+    setNavSearch("");
+    onSearchChange("");
+    setShowSearchMobile(false);
   };
 
   return (
@@ -93,20 +109,19 @@ const Navbar = ({
 
             {/* Center: Centered Legacy Store Logo */}
             <div
-              className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center cursor-pointer"
+              className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center cursor-pointer gap-2.5"
               onClick={handleHomeClick}
             >
               <img
                 src="/images/LOGO.png"
                 alt="Legacy Store"
-                className="h-9 w-auto object-contain"
+                className="h-10 sm:h-12 w-auto object-contain"
                 onError={(e) => {
                   e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "block";
                 }}
               />
-              <span className="hidden font-serif text-lg tracking-widest uppercase font-bold text-black whitespace-nowrap">
-                LEGACY STORE
+              <span className="font-serif text-xl sm:text-2xl tracking-[0.2em] uppercase font-black text-black whitespace-nowrap">
+                LEGACY
               </span>
             </div>
 
@@ -133,15 +148,15 @@ const Navbar = ({
           {/* ========================================================= */}
           {/* DESKTOP HEADER LAYOUT (>= md screen) */}
           {/* ========================================================= */}
-          <div className="hidden md:flex items-center justify-between h-20">
+          <div className="hidden md:grid grid-cols-3 items-center h-20">
             {/* Left Navigation (Desktop Site Pages) */}
-            <nav className="flex items-center space-x-6 xl:space-x-8">
+            <nav className="flex items-center space-x-5 xl:space-x-7 justify-start">
               <button
                 onClick={handleHomeClick}
-                className={`text-xs font-bold tracking-wider uppercase transition-colors duration-200 relative py-1 cursor-pointer ${
+                className={`text-xs font-bold tracking-[0.15em] uppercase py-1 cursor-pointer transition-colors duration-300 relative inline-block whitespace-nowrap ${
                   activePage === "home"
-                    ? 'text-black after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-black'
-                    : "text-neutral-500 hover:text-black"
+                    ? "text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-full after:h-0.5 after:bg-black"
+                    : "text-neutral-500 hover:text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-full after:h-0.5 after:bg-black after:transition-all after:duration-300"
                 }`}
               >
                 HOME
@@ -149,10 +164,10 @@ const Navbar = ({
 
               <button
                 onClick={handleShopClick}
-                className={`text-xs font-bold tracking-wider uppercase transition-colors duration-200 relative py-1 cursor-pointer ${
+                className={`text-xs font-bold tracking-[0.15em] uppercase py-1 cursor-pointer transition-colors duration-300 relative inline-block whitespace-nowrap ${
                   activePage === "shop"
-                    ? 'text-black after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-black'
-                    : "text-neutral-500 hover:text-black"
+                    ? "text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-full after:h-0.5 after:bg-black"
+                    : "text-neutral-500 hover:text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-full after:h-0.5 after:bg-black after:transition-all after:duration-300"
                 }`}
               >
                 SHOP & COLLECTIONS
@@ -160,32 +175,21 @@ const Navbar = ({
 
               <button
                 onClick={() => handlePageClick("about")}
-                className={`text-xs font-bold tracking-wider uppercase transition-colors duration-200 relative py-1 cursor-pointer ${
+                className={`text-xs font-bold tracking-[0.15em] uppercase py-1 cursor-pointer transition-colors duration-300 relative inline-block whitespace-nowrap ${
                   activePage === "about"
-                    ? 'text-black after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-black'
-                    : "text-neutral-500 hover:text-black"
+                    ? "text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-full after:h-0.5 after:bg-black"
+                    : "text-neutral-500 hover:text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-full after:h-0.5 after:bg-black after:transition-all after:duration-300"
                 }`}
               >
                 ABOUT
               </button>
 
               <button
-                onClick={() => handlePageClick("lookbook")}
-                className={`text-xs font-bold tracking-wider uppercase transition-colors duration-200 relative py-1 cursor-pointer ${
-                  activePage === "lookbook"
-                    ? 'text-black after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-black'
-                    : "text-neutral-500 hover:text-black"
-                }`}
-              >
-                LOOKBOOK & MODELS
-              </button>
-
-              <button
                 onClick={() => handlePageClick("contact")}
-                className={`text-xs font-bold tracking-wider uppercase transition-colors duration-200 relative py-1 cursor-pointer ${
+                className={`text-xs font-bold tracking-[0.15em] uppercase py-1 cursor-pointer transition-colors duration-300 relative inline-block whitespace-nowrap ${
                   activePage === "contact"
-                    ? 'text-black after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-black'
-                    : "text-neutral-500 hover:text-black"
+                    ? "text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-full after:h-0.5 after:bg-black"
+                    : "text-neutral-500 hover:text-black after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-full after:h-0.5 after:bg-black after:transition-all after:duration-300"
                 }`}
               >
                 CONTACT
@@ -194,42 +198,42 @@ const Navbar = ({
 
             {/* Center Brand Logo (Desktop) */}
             <div
-              className="flex items-center justify-center cursor-pointer"
+              className="flex items-center justify-center cursor-pointer gap-3.5 group"
               onClick={handleHomeClick}
             >
               <img
                 src="/images/LOGO.png"
                 alt="Legacy Store"
-                className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 hover:scale-105"
+                className="h-12 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
                   e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "block";
                 }}
               />
-              <span className="hidden font-serif text-xl sm:text-2xl tracking-widest uppercase font-bold text-black whitespace-nowrap">
-                LEGACY STORE
+              <span className="font-serif text-2xl sm:text-3xl lg:text-4xl tracking-[0.25em] uppercase font-black text-black whitespace-nowrap border-l-2 sm:border-l-3 border-black/80 pl-3.5 py-0.5 leading-none transition-transform duration-300 group-hover:scale-105">
+                LEGACY
               </span>
             </div>
 
             {/* Right Actions (Desktop) */}
-            <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="flex items-center justify-end space-x-2.5 sm:space-x-3">
               {/* Desktop Search Bar */}
-              <div className="relative flex items-center">
+              <div className="relative flex items-center shrink-0">
+                {/* Floating Search Bar (Slides out gracefully to the left without squishing icons) */}
                 <div
-                  className={`transition-all duration-300 ease-in-out overflow-hidden flex items-center ${
+                  className={`absolute right-12 top-1/2 -translate-y-1/2 z-30 transition-all duration-300 ease-out flex items-center ${
                     showSearchMobile
-                      ? "w-48 sm:w-60 opacity-100 mr-1"
-                      : "w-0 opacity-0 pointer-events-none"
+                      ? "w-52 sm:w-64 opacity-100 scale-100 pointer-events-auto"
+                      : "w-0 opacity-0 scale-95 pointer-events-none overflow-hidden"
                   }`}
                 >
                   <Input
-                    placeholder="Search items..."
+                    placeholder="Search luxury products..."
+                    prefix={
+                      <SearchOutlined className="text-neutral-400 mr-1" />
+                    }
                     suffix={
                       <button
-                        onClick={() => {
-                          onSearchChange("");
-                          setShowSearchMobile(false);
-                        }}
+                        onClick={handleClearNavbarSearch}
                         className="text-neutral-400 hover:text-black transition-colors flex items-center justify-center p-0.5 cursor-pointer"
                         title="Close search"
                       >
@@ -238,24 +242,24 @@ const Navbar = ({
                         />
                       </button>
                     }
-                    value={searchQuery}
+                    value={navSearch}
                     onChange={handleSearchInputChange}
-                    className="w-full text-xs !rounded-full border-neutral-300 py-1.5 pl-4 pr-2.5 shadow-xs hover:border-black focus:border-black transition-all"
+                    className="w-full text-xs !rounded-full border-neutral-300 py-1.5 pl-3.5 pr-2.5 shadow-lg bg-white hover:border-black focus:border-black transition-all"
                     autoFocus={showSearchMobile}
                   />
                 </div>
 
                 <button
                   onClick={() => setShowSearchMobile(!showSearchMobile)}
-                  className={`p-2 rounded-full transition-colors leading-none flex items-center justify-center cursor-pointer ${
+                  className={`w-10 h-10 shrink-0 aspect-square rounded-full border transition-all duration-300 flex items-center justify-center shadow-xs cursor-pointer ${
                     showSearchMobile
-                      ? "text-black bg-neutral-100"
-                      : "text-black hover:bg-neutral-100"
+                      ? "text-black bg-neutral-100 border-black"
+                      : "text-neutral-700 hover:text-black bg-neutral-100 hover:bg-neutral-200 border-neutral-200 hover:border-black"
                   }`}
                   aria-label="Search items"
                   title="Search items"
                 >
-                  <SearchOutlined style={{ fontSize: "18px" }} />
+                  <SearchOutlined style={{ fontSize: "17px" }} />
                 </button>
               </div>
 
@@ -272,12 +276,12 @@ const Navbar = ({
                     handlePageClick("account");
                   }
                 }}
-                className={`w-10 h-10 p-0 rounded-full flex items-center justify-center border transition-all duration-300 leading-none shadow-xs font-serif font-bold text-sm cursor-pointer ${
+                className={`w-10 h-10 shrink-0 aspect-square p-0 rounded-full flex items-center justify-center border transition-all duration-300 leading-none shadow-xs font-serif font-bold text-sm cursor-pointer overflow-hidden ${
                   activePage === "account" || activePage === "admin"
                     ? "bg-black text-white border-black"
                     : user
                       ? "bg-neutral-900 text-white border-black hover:bg-neutral-800"
-                      : "bg-neutral-100 text-black border-neutral-200 hover:bg-neutral-200"
+                      : "bg-neutral-100 text-black border-neutral-200 hover:bg-neutral-200 hover:border-black"
                 }`}
                 aria-label="User Account Portal"
                 title={
@@ -301,24 +305,26 @@ const Navbar = ({
                 )}
               </button>
 
-              {/* Delivery Tracker Button (Desktop) */}
-              <button
-                onClick={onOpenDeliveryTracking}
-                className="relative w-10 h-10 p-0 bg-amber-500 hover:bg-amber-400 text-black rounded-full transition-all duration-300 flex items-center justify-center border border-amber-600 shadow-md leading-none cursor-pointer group"
-                title="Track Live Delivery 🚚"
-                aria-label="Track Live Delivery"
-              >
-                <CarOutlined style={{ fontSize: "18px", color: "#000000" }} />
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-600"></span>
-                </span>
-              </button>
+              {/* Delivery Tracker Button (Desktop - Only Shown After User Payout) */}
+              {hasPaidOrder && (
+                <button
+                  onClick={onOpenDeliveryTracking}
+                  className="relative w-10 h-10 shrink-0 aspect-square p-0 bg-amber-500 hover:bg-amber-400 text-black rounded-full transition-all duration-300 flex items-center justify-center border border-amber-600 shadow-md leading-none cursor-pointer group"
+                  title="Track Live Delivery 🚚"
+                  aria-label="Track Live Delivery"
+                >
+                  <CarOutlined style={{ fontSize: "18px", color: "#000000" }} />
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-600"></span>
+                  </span>
+                </button>
+              )}
 
               {/* Wishlist Button (Desktop) */}
               <button
                 onClick={onOpenWishlist}
-                className="relative w-10 h-10 p-0 bg-neutral-100 text-black rounded-full hover:bg-neutral-200 transition-all duration-300 flex items-center justify-center border border-neutral-200 shadow-sm leading-none cursor-pointer"
+                className="relative w-10 h-10 shrink-0 aspect-square p-0 bg-neutral-100 text-black rounded-full hover:bg-neutral-200 border border-neutral-200 hover:border-black transition-all duration-300 flex items-center justify-center shadow-xs leading-none cursor-pointer"
                 aria-label="View Wishlist"
                 title="View Wishlist"
               >
@@ -338,8 +344,9 @@ const Navbar = ({
               {/* Cart Button (Desktop) */}
               <button
                 onClick={onOpenCart}
-                className="relative w-10 h-10 p-0 bg-black text-white rounded-full hover:bg-neutral-800 transition-all duration-300 flex items-center justify-center shadow-sm leading-none cursor-pointer"
+                className="relative w-10 h-10 shrink-0 aspect-square p-0 bg-black text-white rounded-full hover:bg-neutral-800 border border-black transition-all duration-300 flex items-center justify-center shadow-xs leading-none cursor-pointer"
                 aria-label="View Shopping Cart"
+                title="View Shopping Cart"
               >
                 <Badge
                   count={cartCount}
@@ -365,13 +372,13 @@ const Navbar = ({
               prefix={<SearchOutlined className="text-neutral-400 mr-1" />}
               suffix={
                 <button
-                  onClick={() => setShowSearchMobile(false)}
+                  onClick={handleClearNavbarSearch}
                   className="text-neutral-400 hover:text-black p-1 cursor-pointer"
                 >
                   <CloseOutlined style={{ fontSize: "12px" }} />
                 </button>
               }
-              value={searchQuery}
+              value={navSearch}
               onChange={handleSearchInputChange}
               className="w-full text-xs rounded-full py-1.5 border-neutral-300 focus:border-black"
               autoFocus
@@ -489,16 +496,16 @@ const Navbar = ({
         title={
           <div className="flex items-center justify-between w-full pr-1">
             <div
-              className="flex items-center space-x-2.5 cursor-pointer"
+              className="flex items-center space-x-3 cursor-pointer"
               onClick={handleHomeClick}
             >
               <img
                 src="/images/LOGO.png"
                 alt="Logo"
-                className="h-7 sm:h-8 w-auto object-contain"
+                className="h-9 sm:h-10 w-auto object-contain"
               />
-              <span className="font-serif text-sm sm:text-base font-bold tracking-widest uppercase text-black">
-                ALEXANDRE LUXE
+              <span className="font-serif text-lg sm:text-xl font-black tracking-widest uppercase text-black">
+                LEGACY
               </span>
             </div>
             {/* Custom Close Icon Button < */}
@@ -576,7 +583,7 @@ const Navbar = ({
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-xs font-extrabold text-white">
-                        Maison Alexandre
+                        Maison Legacy
                       </h4>
                       <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded inline-block mt-0.5 font-semibold">
                         GUEST CLIENT
@@ -737,7 +744,7 @@ const Navbar = ({
 
             <div className="text-center pt-1">
               <p className="text-[10px] text-neutral-400 font-mono">
-                ✉️ concierge@alexandreluxe.com • Paris
+                ✉️ concierge@legacystore.com • Paris
               </p>
             </div>
           </div>

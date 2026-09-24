@@ -5,62 +5,67 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Product::with('category');
+        $cacheKey = 'products_query_' . md5(json_encode($request->all()));
 
-        // Filter by category ID
-        if ($request->has('category_id') && $request->category_id !== null && $request->category_id !== 'all') {
-            $query->where('category_id', $request->category_id);
-        }
+        $products = Cache::remember($cacheKey, 300, function () use ($request) {
+            $query = Product::with('category');
 
-        // Filter by category slug
-        if ($request->has('category_slug') && $request->category_slug !== 'all') {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('slug', $request->category_slug);
-            });
-        }
-
-        // Search query
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        // Featured products
-        if ($request->boolean('featured')) {
-            $query->where('is_featured', true);
-        }
-
-        // Sorting
-        if ($request->has('sort')) {
-            switch ($request->sort) {
-                case 'price_asc':
-                    $query->orderBy('price', 'asc');
-                    break;
-                case 'price_desc':
-                    $query->orderBy('price', 'desc');
-                    break;
-                case 'latest':
-                default:
-                    $query->orderBy('created_at', 'desc');
-                    break;
+            // Filter by category ID
+            if ($request->has('category_id') && $request->category_id !== null && $request->category_id !== 'all') {
+                $query->where('category_id', $request->category_id);
             }
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
 
-        $products = $query->get();
+            // Filter by category slug
+            if ($request->has('category_slug') && $request->category_slug !== 'all') {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('slug', $request->category_slug);
+                });
+            }
+
+            // Search query
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            // Featured products
+            if ($request->boolean('featured')) {
+                $query->where('is_featured', true);
+            }
+
+            // Sorting
+            if ($request->has('sort')) {
+                switch ($request->sort) {
+                    case 'price_asc':
+                        $query->orderBy('price', 'asc');
+                        break;
+                    case 'price_desc':
+                        $query->orderBy('price', 'desc');
+                        break;
+                    case 'latest':
+                    default:
+                        $query->orderBy('created_at', 'desc');
+                        break;
+                }
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+
+            return $query->get()->toArray();
+        });
 
         return response()->json([
             'success' => true,
-            'count' => $products->count(),
+            'count' => count($products),
             'data' => $products
         ]);
     }
@@ -84,6 +89,17 @@ class ProductController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        foreach (['gallery', 'sizes', 'colors'] as $field) {
+            if ($request->has($field) && is_string($request->$field)) {
+                $decoded = json_decode($request->$field, true);
+                if (is_array($decoded)) {
+                    $request->merge([$field => $decoded]);
+                } else if (!empty(trim($request->$field))) {
+                    $request->merge([$field => array_map('trim', explode(',', $request->$field))]);
+                }
+            }
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
@@ -92,6 +108,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'sizes' => 'nullable|array',
             'colors' => 'nullable|array',
+            'gallery' => 'nullable|array',
             'image_url' => 'required|string',
             'is_featured' => 'nullable|boolean',
             'is_new' => 'nullable|boolean',
@@ -100,9 +117,11 @@ class ProductController extends Controller
 
         $validated['slug'] = \Illuminate\Support\Str::slug($validated['name']) . '-' . time();
         $validated['sizes'] = $validated['sizes'] ?? ["S", "M", "L", "XL"];
-        $validated['colors'] = $validated['colors'] ?? ["Standard"];
+        $validated['colors'] = $validated['colors'] ?? ["Black", "White"];
+        $validated['gallery'] = $validated['gallery'] ?? [];
 
         $product = Product::create($validated);
+        Cache::flush();
 
         return response()->json([
             'success' => true,
@@ -118,6 +137,17 @@ class ProductController extends Controller
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
+        foreach (['gallery', 'sizes', 'colors'] as $field) {
+            if ($request->has($field) && is_string($request->$field)) {
+                $decoded = json_decode($request->$field, true);
+                if (is_array($decoded)) {
+                    $request->merge([$field => $decoded]);
+                } else if (!empty(trim($request->$field))) {
+                    $request->merge([$field => array_map('trim', explode(',', $request->$field))]);
+                }
+            }
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'category_id' => 'sometimes|required|exists:categories,id',
@@ -126,6 +156,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'sizes' => 'nullable|array',
             'colors' => 'nullable|array',
+            'gallery' => 'nullable|array',
             'image_url' => 'sometimes|required|string',
             'is_featured' => 'nullable|boolean',
             'is_new' => 'nullable|boolean',
@@ -137,6 +168,7 @@ class ProductController extends Controller
         }
 
         $product->update($validated);
+        Cache::flush();
 
         return response()->json([
             'success' => true,
@@ -153,6 +185,7 @@ class ProductController extends Controller
         }
 
         $product->delete();
+        Cache::flush();
 
         return response()->json([
             'success' => true,

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Table, Tag, Button, Modal, Form, Input, notification } from "antd";
+import ImageTrimModal from "../components/ImageTrimModal";
+import ReceiptModal from "../components/ReceiptModal";
 import {
   UserOutlined,
   ShoppingOutlined,
@@ -18,6 +20,7 @@ import {
   HomeOutlined,
   IdcardOutlined,
   CameraOutlined,
+  ScissorOutlined,
 } from "@ant-design/icons";
 import { fetchOrders, updateUser } from "../services/api";
 
@@ -27,8 +30,10 @@ const UserAccountPage = ({
   onLogout,
   wishlistItems = [],
   onAddToCart,
+  onRemoveFromWishlist,
   onQuickView,
   onNavigateShop,
+  onOpenDeliveryTracking,
 }) => {
   // Active User Profile object with fallbacks
   const profile = currentUser || {
@@ -63,6 +68,10 @@ const UserAccountPage = ({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [form] = Form.useForm();
 
+  // Image Trim & Position Modal State
+  const [trimModalOpen, setTrimModalOpen] = useState(false);
+  const [trimImageSrc, setTrimImageSrc] = useState(null);
+
   const [avatarImage, setAvatarImage] = useState(
     profile.avatar || profile.avatar_url || null,
   );
@@ -77,32 +86,39 @@ const UserAccountPage = ({
     const file = e.target.files && e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = async (event) => {
+      reader.onload = (event) => {
         const dataUrl = event.target.result;
-        setAvatarImage(dataUrl);
-        const updated = {
-          ...profile,
-          avatar: dataUrl,
-          avatar_url: dataUrl,
-        };
-        if (profile.id) {
-          try {
-            await updateUser(profile.id, { avatar: dataUrl });
-          } catch (err) {
-            console.warn("Failed to save avatar to DB:", err);
-          }
-        }
-        if (onUpdateProfile) {
-          onUpdateProfile(updated);
-        }
-        notification.success({
-          message: "PROFILE PHOTO UPDATED",
-          description: "Your VIP avatar picture has been updated.",
-          placement: "bottomRight",
-          duration: 2,
-        });
+        setTrimImageSrc(dataUrl);
+        setTrimModalOpen(true);
       };
       reader.readAsDataURL(file);
+    }
+    if (e.target) e.target.value = "";
+  };
+
+  const handleOpenTrimForCurrent = () => {
+    if (avatarImage) {
+      setTrimImageSrc(avatarImage);
+      setTrimModalOpen(true);
+    }
+  };
+
+  const handleCropComplete = async (croppedDataUrl) => {
+    setAvatarImage(croppedDataUrl);
+    const updated = {
+      ...profile,
+      avatar: croppedDataUrl,
+      avatar_url: croppedDataUrl,
+    };
+    if (profile.id) {
+      try {
+        await updateUser(profile.id, { avatar: croppedDataUrl });
+      } catch (err) {
+        console.warn("Failed to save avatar to DB:", err);
+      }
+    }
+    if (onUpdateProfile) {
+      onUpdateProfile(updated);
     }
   };
 
@@ -214,29 +230,33 @@ const UserAccountPage = ({
     switch (status?.toLowerCase()) {
       case "completed":
       case "delivered":
+      case "arrived":
         return (
-          <span className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
-            <CheckCircleOutlined className="text-[10px] text-emerald-600" />{" "}
+          <span className="inline-flex items-center gap-1 bg-black text-white border border-black text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
+            <CheckCircleOutlined className="text-[10px] text-emerald-400" />{" "}
             DELIVERED
           </span>
         );
       case "shipped":
+      case "delivering":
+      case "out_for_delivery":
         return (
-          <span className="inline-flex items-center gap-1 bg-purple-500/15 text-purple-700 border border-purple-500/30 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
-            <CarOutlined className="text-[10px] text-purple-600" /> SHIPPED
+          <span className="inline-flex items-center gap-1 bg-neutral-800 text-white border border-neutral-700 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
+            <CarOutlined className="text-[10px] text-amber-400" /> SHIPPED
           </span>
         );
       case "processing":
+      case "preparing":
         return (
-          <span className="inline-flex items-center gap-1 bg-blue-500/15 text-blue-700 border border-blue-500/30 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
-            <SyncOutlined spin className="text-[10px] text-blue-600" />{" "}
+          <span className="inline-flex items-center gap-1 bg-neutral-700 text-white border border-neutral-600 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
+            <SyncOutlined spin className="text-[10px] text-amber-400" />{" "}
             PREPARING
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 bg-amber-500/15 text-amber-700 border border-amber-500/30 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
-            <ClockCircleOutlined className="text-[10px] text-amber-600" />{" "}
+          <span className="inline-flex items-center gap-1 bg-neutral-100 text-neutral-900 border border-neutral-300 text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full shadow-2xs">
+            <ClockCircleOutlined className="text-[10px] text-neutral-700" />{" "}
             PENDING
           </span>
         );
@@ -282,22 +302,45 @@ const UserAccountPage = ({
       title: "DELIVERY STATUS",
       dataIndex: "status",
       key: "status",
-      render: (status) => getStatusBadge(status),
+      render: (status, record) => (
+        <div
+          onClick={() =>
+            onOpenDeliveryTracking && onOpenDeliveryTracking(record)
+          }
+          className="cursor-pointer hover:opacity-80 transition-opacity inline-block"
+          title="Click to track live delivery"
+        >
+          {getStatusBadge(status)}
+        </div>
+      ),
     },
     {
-      title: "RECEIPT",
-      key: "receipt",
-      width: 90,
+      title: "ACTIONS",
+      key: "actions",
+      width: 140,
       render: (_, record) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          size="small"
-          onClick={() => setSelectedOrderDetails(record)}
-          className="text-xs font-semibold text-neutral-600 hover:text-black"
-        >
-          View
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {onOpenDeliveryTracking && (
+            <Button
+              type="primary"
+              size="small"
+              icon={<CarOutlined />}
+              onClick={() => onOpenDeliveryTracking(record)}
+              className="bg-amber-500 hover:!bg-amber-400 text-black border-none text-[10px] font-mono font-bold uppercase h-6 px-2 shadow-2xs"
+            >
+              Track
+            </Button>
+          )}
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            size="small"
+            onClick={() => setSelectedOrderDetails(record)}
+            className="text-xs font-semibold text-neutral-600 hover:text-black"
+          >
+            Receipt
+          </Button>
+        </div>
       ),
     },
   ];
@@ -335,7 +378,7 @@ const UserAccountPage = ({
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6 sm:space-y-8">
         {/* User Profile Card (Sleek, Compact, Luxury Parisian Style) */}
-        <div className="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200/80 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200/80 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4 scroll-reveal">
           <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 w-full md:w-auto text-center sm:text-left">
             {/* Interactive Hover-to-Upload Profile Avatar Circle (BIGGER PROMINENT PHOTO) */}
             <div
@@ -392,7 +435,7 @@ const UserAccountPage = ({
                 📧 {profile.email} • 📞 {profile.phone || "+33 1 42 68 55 00"}
               </p>
 
-              <div className="flex items-center justify-center sm:justify-start gap-2.5 pt-1">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={handleOpenEditModal}
@@ -438,17 +481,17 @@ const UserAccountPage = ({
         </div>
 
         {/* Order History Section */}
-        <div>
+        <div className="scroll-reveal-scale">
           <div className="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2 gap-2">
             <div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-amber-600 uppercase tracking-widest block font-mono">
+              <span className="text-[8px] sm:text-[9px] font-bold text-neutral-500 uppercase tracking-widest block font-mono">
                 ✦ PERSONAL PURCHASES
               </span>
               <h3 className="text-base sm:text-lg font-bold font-serif uppercase tracking-tight text-black m-0">
                 MY ORDER HISTORY & TRACKING
               </h3>
             </div>
-            <span className="bg-neutral-900 text-amber-400 border border-amber-500/30 text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full shadow-2xs">
+            <span className="bg-black text-white border border-black text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full shadow-2xs">
               {orders.length} ORDERS
             </span>
           </div>
@@ -463,7 +506,7 @@ const UserAccountPage = ({
                 <Button
                   onClick={onNavigateShop}
                   type="primary"
-                  className="bg-black hover:bg-neutral-800 text-amber-400 font-extrabold text-[10px] uppercase px-4 h-7.5 rounded-md border border-amber-500/30"
+                  className="bg-black hover:bg-neutral-800 text-white font-extrabold text-[10px] uppercase px-4 h-7.5 rounded-md border border-black"
                 >
                   EXPLORE SHOP & COLLECTIONS
                 </Button>
@@ -484,16 +527,16 @@ const UserAccountPage = ({
                 />
               </div>
 
-              {/* Mobile & Tablet 2-Column Luxury Color Order Cards (< md) */}
-              <div className="grid grid-cols-2 gap-2 block md:hidden">
+              {/* Mobile & Tablet 2-Column Monochromatic Order Cards (< md) */}
+              <div className="grid grid-cols-2 gap-2.5 block md:hidden">
                 {orders.map((ord) => (
                   <div
                     key={ord.id}
-                    className="bg-white rounded-lg border border-neutral-200/90 shadow-2xs overflow-hidden flex flex-col justify-between hover:border-neutral-900 transition-all"
+                    className="bg-white rounded-lg border border-neutral-200/90 shadow-2xs overflow-hidden flex flex-col justify-between hover:border-black transition-all"
                   >
-                    {/* Dark Gold Header Bar */}
-                    <div className="bg-gradient-to-r from-neutral-950 via-neutral-900 to-black px-2 py-1.5 flex items-center justify-between gap-1 border-b border-amber-500/20 text-white">
-                      <span className="font-mono font-extrabold text-[10px] text-amber-400 truncate">
+                    {/* Black Header Bar */}
+                    <div className="bg-black px-2.5 py-1.5 flex items-center justify-between gap-1 border-b border-neutral-800 text-white">
+                      <span className="font-mono font-extrabold text-[10px] text-white truncate">
                         {ord.order_number || `LX-${ord.id}`}
                       </span>
                       <div className="shrink-0 scale-75 origin-right">
@@ -502,7 +545,7 @@ const UserAccountPage = ({
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-2 bg-gradient-to-b from-white via-neutral-50/40 to-amber-50/10 space-y-1.5 flex-1 flex flex-col justify-between">
+                    <div className="p-2.5 bg-white space-y-2 flex-1 flex flex-col justify-between">
                       {/* Items & Date */}
                       <div className="flex items-center justify-between text-[8px] text-neutral-500 font-mono pt-0.5">
                         <span className="font-semibold text-neutral-700">
@@ -516,16 +559,16 @@ const UserAccountPage = ({
                       </div>
 
                       {/* Bottom Price & RECEIPT Button */}
-                      <div className="flex items-center justify-between gap-1 pt-1 border-t border-neutral-100">
-                        <span className="font-mono font-black text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded shrink-0">
+                      <div className="flex items-center justify-between gap-1 pt-1.5 border-t border-neutral-100">
+                        <span className="font-mono font-black text-[11px] text-black bg-neutral-100 border border-neutral-200 px-1.5 py-0.5 rounded shrink-0">
                           ${Number(ord.total_amount || 0).toFixed(2)}
                         </span>
                         <button
                           type="button"
                           onClick={() => setSelectedOrderDetails(ord)}
-                          className="bg-neutral-900 hover:bg-black text-amber-300 hover:text-amber-400 border border-amber-500/30 text-[8px] font-mono font-bold uppercase tracking-wider h-5.5 px-2 rounded flex items-center gap-1 cursor-pointer transition-all shrink-0 shadow-2xs"
+                          className="bg-black hover:bg-neutral-800 text-white border border-black text-[8px] font-mono font-bold uppercase tracking-wider h-5.5 px-2 rounded flex items-center gap-1 cursor-pointer transition-all shrink-0 shadow-2xs"
                         >
-                          <EyeOutlined className="text-[8px] text-amber-400" />
+                          <EyeOutlined className="text-[8px] text-white" />
                           <span>RECEIPT</span>
                         </button>
                       </div>
@@ -538,10 +581,10 @@ const UserAccountPage = ({
         </div>
 
         {/* Wishlist Section */}
-        <div>
+        <div className="scroll-reveal">
           <div className="flex items-center justify-between mb-3 border-b border-neutral-200 pb-2">
             <div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-amber-600 uppercase tracking-widest block font-mono">
+              <span className="text-[8px] sm:text-[9px] font-bold text-neutral-500 uppercase tracking-widest block font-mono">
                 ✦ SAVED FAVORITES
               </span>
               <h3 className="text-base sm:text-lg font-bold font-serif uppercase tracking-tight text-black flex items-center gap-1.5 m-0">
@@ -560,14 +603,14 @@ const UserAccountPage = ({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+            <div className="flex flex-wrap gap-3 scroll-reveal-stagger">
               {wishlistItems.map((prod) => (
                 <div
                   key={prod.id}
-                  className="bg-white p-1.5 sm:p-2.5 rounded-lg border border-neutral-200/90 flex flex-col justify-between hover:border-neutral-900 shadow-2xs transition-all space-y-1.5"
+                  className="bg-white p-2 rounded-xl border border-neutral-200/90 flex flex-col justify-between hover:border-neutral-900 shadow-2xs transition-all space-y-1.5 w-[160px] sm:w-[180px] md:w-[200px] shrink-0"
                 >
                   <div
-                    className="relative w-full h-32 sm:h-40 md:h-44 rounded overflow-hidden bg-neutral-100 cursor-pointer group shrink-0"
+                    className="relative w-full h-32 sm:h-36 md:h-40 rounded-lg overflow-hidden bg-neutral-100 cursor-pointer group shrink-0"
                     onClick={() => onQuickView && onQuickView(prod)}
                   >
                     <img
@@ -589,10 +632,20 @@ const UserAccountPage = ({
 
                     <button
                       type="button"
-                      onClick={() => onAddToCart && onAddToCart(prod)}
-                      className="w-full bg-neutral-950 hover:bg-black text-amber-300 hover:text-amber-400 border border-amber-500/30 text-[8px] sm:text-[9px] font-mono font-bold uppercase tracking-wider h-6 sm:h-7 rounded flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                      onClick={() => {
+                        if (onAddToCart) onAddToCart(prod);
+                        if (onRemoveFromWishlist) onRemoveFromWishlist(prod);
+                        notification.success({
+                          message: "MOVED TO BAG",
+                          description: `${prod.name} added to bag and removed from wishlist.`,
+                          placement: "bottomRight",
+                          duration: 2,
+                        });
+                      }}
+                      className="w-full bg-black hover:bg-neutral-800 text-white text-[9px] font-mono font-bold uppercase tracking-wider h-7 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs border border-neutral-900"
                     >
-                      <span>+ ADD TO BAG</span>
+                      <ShoppingOutlined className="text-amber-400 text-xs" />
+                      <span>ADD TO BAG</span>
                     </button>
                   </div>
                 </div>
@@ -725,70 +778,20 @@ const UserAccountPage = ({
         </Form>
       </Modal>
 
-      {/* Order Receipt Modal */}
-      <Modal
-        title={
-          <span className="font-serif font-black uppercase text-sm sm:text-base text-black">
-            RECEIPT FOR ORDER #
-            {selectedOrderDetails?.order_number || selectedOrderDetails?.id}
-          </span>
-        }
+      {/* Professional Downloadable Order Receipt Modal */}
+      <ReceiptModal
         open={!!selectedOrderDetails}
-        onCancel={() => setSelectedOrderDetails(null)}
-        footer={null}
-        width={600}
-      >
-        {selectedOrderDetails && (
-          <div className="space-y-4 pt-2">
-            <div className="bg-neutral-50 p-3.5 sm:p-4 rounded-lg border border-neutral-200 space-y-1 text-xs font-mono break-all">
-              <p>
-                <strong>Customer:</strong> {selectedOrderDetails.customer_name}
-              </p>
-              <p>
-                <strong>Email:</strong> {selectedOrderDetails.customer_email}
-              </p>
-              <p>
-                <strong>Phone:</strong> {selectedOrderDetails.phone}
-              </p>
-              <p>
-                <strong>Address:</strong>{" "}
-                {selectedOrderDetails.shipping_address}
-              </p>
-              <p>
-                <strong>Payment Method:</strong>{" "}
-                {selectedOrderDetails.payment_method?.toUpperCase()}
-              </p>
-            </div>
+        onClose={() => setSelectedOrderDetails(null)}
+        order={selectedOrderDetails}
+      />
 
-            <div className="space-y-2">
-              <h4 className="text-xs font-extrabold uppercase font-serif text-black">
-                ORDERED ITEMS:
-              </h4>
-              {selectedOrderDetails.items?.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center text-xs py-1.5 border-b border-neutral-100 font-mono"
-                >
-                  <span>
-                    {item.quantity}x {item.product_name} (
-                    {item.size || "Standard"})
-                  </span>
-                  <span className="font-bold">
-                    ${Number(item.price * item.quantity).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-between items-center pt-3 text-sm font-black font-mono border-t border-black">
-              <span>TOTAL PAID:</span>
-              <span>
-                ${Number(selectedOrderDetails.total_amount || 0).toFixed(2)}
-              </span>
-            </div>
-          </div>
-        )}
-      </Modal>
+      {/* Image Trim & Position Modal */}
+      <ImageTrimModal
+        open={trimModalOpen}
+        onClose={() => setTrimModalOpen(false)}
+        imageSrc={trimImageSrc}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };

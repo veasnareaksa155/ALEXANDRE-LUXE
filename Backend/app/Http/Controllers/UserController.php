@@ -28,41 +28,25 @@ class UserController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if ($user) {
-            if (Hash::check($validated['password'], $user->password) || $validated['password'] === 'password123') {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Login successful',
-                    'data' => $user
-                ]);
-            }
+        if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid password credentials'
-            ], 401);
+                'message' => 'Account not registered in database. Please register a new account first before logging in.'
+            ], 404);
         }
 
-        // Auto-create user if logging in for first time with valid details
-        $role = str_contains(strtolower($validated['email']), 'admin') ? 'admin' : 'user';
-        $name = str_contains($validated['email'], '@')
-            ? ucwords(str_replace(['.', '_'], ' ', explode('@', $validated['email'])[0]))
-            : 'Alexandre Client';
-
-        $user = User::create([
-            'name' => $name,
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $role,
-            'tier' => 'BLACK DIAMOND VIP',
-            'phone' => '+855 12 ' . rand(100, 999) . ' ' . rand(100, 999),
-            'address' => 'Phnom Penh, Cambodia',
-        ]);
+        if (Hash::check($validated['password'], $user->password) || $validated['password'] === 'password123') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful',
+                'data' => $user
+            ]);
+        }
 
         return response()->json([
-            'success' => true,
-            'message' => 'New user account created and logged in',
-            'data' => $user
-        ], 201);
+            'success' => false,
+            'message' => 'Invalid email or password credentials'
+        ], 401);
     }
 
     public function store(Request $request): JsonResponse
@@ -71,15 +55,16 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => 'nullable|string|in:user,admin',
+            'role' => 'nullable|string|in:user,admin,driver',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'tier' => 'nullable|string',
+            'vehicle_tag' => 'nullable|string|max:100',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['role'] = $validated['role'] ?? 'user';
-        $validated['tier'] = $validated['tier'] ?? 'BLACK DIAMOND VIP';
+        $validated['tier'] = $validated['role'] === 'driver' ? 'COURIER DRIVER' : ($validated['tier'] ?? 'BLACK DIAMOND VIP');
 
         $user = User::create($validated);
 
@@ -97,10 +82,11 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $id,
-            'role' => 'nullable|string|in:user,admin',
+            'role' => 'nullable|string|in:user,admin,driver',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
             'tier' => 'nullable|string',
+            'vehicle_tag' => 'nullable|string|max:100',
             'avatar' => 'nullable|string',
             'password' => 'nullable|string|min:6',
         ]);

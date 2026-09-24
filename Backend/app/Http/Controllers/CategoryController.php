@@ -6,12 +6,15 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        $categories = Category::withCount('products')->get();
+        $categories = Cache::remember('categories_all', 300, function () {
+            return Category::withCount('products')->get()->toArray();
+        });
 
         return response()->json([
             'success' => true,
@@ -33,6 +36,8 @@ class CategoryController extends Controller
 
         $category = Category::create($validated);
         $category->loadCount('products');
+
+        Cache::flush();
 
         return response()->json([
             'success' => true,
@@ -58,6 +63,8 @@ class CategoryController extends Controller
         $category->update($validated);
         $category->loadCount('products');
 
+        Cache::flush();
+
         return response()->json([
             'success' => true,
             'message' => 'Category updated successfully',
@@ -69,6 +76,8 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         $category->delete();
+
+        Cache::flush();
 
         return response()->json([
             'success' => true,

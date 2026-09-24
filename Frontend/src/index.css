@@ -121,18 +121,69 @@ body {
 }
 
 /* Scroll Reveal Animations for luxury experience */
-.scroll-reveal {
-  opacity: 0;
-  transform: translateY(35px);
-  transition:
-    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+html {
+  scroll-behavior: smooth;
 }
 
-.scroll-reveal.is-visible {
+.scroll-reveal,
+.scroll-reveal-left,
+.scroll-reveal-right,
+.scroll-reveal-scale {
+  opacity: 0;
+  will-change: opacity, transform;
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal {
+  transform: translateY(40px);
+}
+
+.scroll-reveal-left {
+  transform: translateX(-45px);
+}
+
+.scroll-reveal-right {
+  transform: translateX(45px);
+}
+
+.scroll-reveal-scale {
+  transform: scale(0.93);
+}
+
+.scroll-reveal.is-visible,
+.scroll-reveal-left.is-visible,
+.scroll-reveal-right.is-visible,
+.scroll-reveal-scale.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) translateX(0) scale(1);
+}
+
+/* Staggered entry for side-by-side elements / grid cards */
+.scroll-reveal-stagger > *:nth-child(1) {
+  transition-delay: 0.05s;
+}
+.scroll-reveal-stagger > *:nth-child(2) {
+  transition-delay: 0.12s;
+}
+.scroll-reveal-stagger > *:nth-child(3) {
+  transition-delay: 0.19s;
+}
+.scroll-reveal-stagger > *:nth-child(4) {
+  transition-delay: 0.26s;
+}
+.scroll-reveal-stagger > *:nth-child(5) {
+  transition-delay: 0.33s;
+}
+.scroll-reveal-stagger > *:nth-child(6) {
+  transition-delay: 0.4s;
+}
+.scroll-reveal-stagger > *:nth-child(7) {
+  transition-delay: 0.47s;
+}
+.scroll-reveal-stagger > *:nth-child(8) {
+  transition-delay: 0.54s;
 }
 
 /* Custom scrollbar */
@@ -154,8 +205,222 @@ body {
   background: #000000;
 }
 
+/* =============================================================
+   ALEXANDRE LUXE VIP NOTIFICATION & TOAST REDESIGN (PARISIAN LUXURY)
+   ============================================================= */
+.ant-notification,
+.luxe-vip-notification {
+  z-index: 999999 !important;
+}
+
+.ant-notification-notice-wrapper {
+  overflow: visible !important;
+  margin-bottom: 12px !important;
+}
+
+.luxe-vip-notification .ant-notification-notice,
+.ant-notification-notice,
+html body .ant-notification-notice {
+  position: relative !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 17, 17, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 16px 44px 16px 16px !important;
+  box-shadow:
+    0 20px 45px -10px rgba(0, 0, 0, 0.14),
+    0 4px 14px rgba(0, 0, 0, 0.04) !important;
+  color: #111111 !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  max-width: 420px !important;
+  min-width: 320px !important;
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Remove any pseudo elements or borders that create crescents */
+.ant-notification-notice::before,
+.ant-notification-notice::after {
+  display: none !important;
+}
+
+.luxe-vip-notification .ant-notification-notice-content,
+.ant-notification-notice-content,
+html body .ant-notification-notice-content {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* Flex Layout Fix - Icon & Text side by side, ZERO overlap, ZERO margin collisions */
+.luxe-vip-notification .ant-notification-notice-with-icon,
+.ant-notification-notice-with-icon,
+html body .ant-notification-notice-with-icon {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+/* Icon Container & Circle Luxury Badge */
+.luxe-vip-notification .ant-notification-notice-icon,
+.ant-notification-notice-icon,
+html body .ant-notification-notice-icon {
+  position: static !important;
+  inset-inline-start: auto !important;
+  left: auto !important;
+  top: auto !important;
+  margin: 1px 0 0 0 !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  transition: transform 0.2s ease !important;
+}
+
+/* Icon Type Specific Luxury Color Scheme & Soft Tint Badges */
+.ant-notification-notice-icon-success,
+html body .ant-notification-notice-icon-success {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #059669 !important;
+}
+.ant-notification-notice-icon-success * {
+  color: #059669 !important;
+}
+
+.ant-notification-notice-icon-info,
+html body .ant-notification-notice-icon-info {
+  background-color: rgba(17, 17, 17, 0.08) !important;
+  color: #111111 !important;
+}
+.ant-notification-notice-icon-info * {
+  color: #111111 !important;
+}
+
+.ant-notification-notice-icon-warning,
+html body .ant-notification-notice-icon-warning {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  color: #d97706 !important;
+}
+.ant-notification-notice-icon-warning * {
+  color: #d97706 !important;
+}
+
+.ant-notification-notice-icon-error,
+html body .ant-notification-notice-icon-error {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #dc2626 !important;
+}
+.ant-notification-notice-icon-error * {
+  color: #dc2626 !important;
+}
+
+/* Notification Title / Header (Targeting AntD 5/6 .ant-notification-notice-title AND AntD 4 .ant-notification-notice-message) */
+.luxe-vip-notification .ant-notification-notice-title,
+.luxe-vip-notification .ant-notification-notice-message,
+.ant-notification-notice-title,
+.ant-notification-notice-message,
+html body .ant-notification-notice-title,
+html body .ant-notification-notice-message,
+html body .ant-notification-notice-title *,
+html body .ant-notification-notice-message * {
+  color: #111111 !important;
+  font-family: "Cinzel", Georgia, serif !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  margin: 0 0 3px 0 !important;
+  margin-inline-start: 0 !important;
+  margin-left: 0 !important;
+  padding: 0 !important;
+  line-height: 1.35 !important;
+  display: block !important;
+}
+
+/* Notification Description Text */
+.luxe-vip-notification .ant-notification-notice-description,
+.ant-notification-notice-description,
+html body .ant-notification-notice-description,
+html body .ant-notification-notice-description * {
+  color: #52525b !important;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-left: 0 !important;
+  padding: 0 !important;
+  word-break: break-word !important;
+  display: block !important;
+}
+
+/* Close Button Styling */
+.luxe-vip-notification .ant-notification-notice-close,
+.ant-notification-notice-close,
+html body .ant-notification-notice-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  color: #9ca3af !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+}
+
+.luxe-vip-notification .ant-notification-notice-close:hover,
+.ant-notification-notice-close:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #111111 !important;
+}
+
+/* Ant Design Message Toast Pill */
+.ant-message-notice-content,
+html body .ant-message-notice-content {
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 17, 17, 0.12) !important;
+  border-radius: 9999px !important;
+  color: #111111 !important;
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 8px 20px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.ant-message-notice-content * {
+  color: #111111 !important;
+}
+
+.ant-message-notice-content * {
+  color: #111111 !important;
+}
+
 /* Ant Design Modal Close Button sleek styling */
-.ant-modal-close {
+html body .ant-modal-close {
   top: 12px !important;
   right: 12px !important;
   width: 32px !important;
@@ -173,12 +438,12 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
-.ant-modal-close:hover {
-  background: #000000 !important;
+html body .ant-modal-close:hover {
+  background: #e4e4e7 !important;
   color: #ffffff !important;
 }
 
-.ant-modal-close .ant-modal-close-x {
+html body .ant-modal-close .ant-modal-close-x {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -186,12 +451,12 @@ body {
   height: 100% !important;
 }
 
-.ant-modal-close:hover .anticon {
+html body .ant-modal-close:hover .anticon {
   color: #ffffff !important;
 }
 
 @media (max-width: 639px) {
-  .ant-modal-close {
+  html body .ant-modal-close {
     top: 8px !important;
     right: 8px !important;
     width: 26px !important;
@@ -199,44 +464,52 @@ body {
   }
 
   /* Compact Ant Design Notification Toasts on Mobile */
+  .luxe-vip-notification,
   .ant-notification {
     max-width: calc(100vw - 24px) !important;
     left: 12px !important;
     right: 12px !important;
-    bottom: 12px !important;
+    bottom: 16px !important;
     margin: 0 auto !important;
   }
 
-  .ant-notification-notice {
-    padding: 10px 14px !important;
-    border-radius: 8px !important;
+  .luxe-vip-notification .ant-notification-notice,
+  .ant-notification-notice,
+  html body .ant-notification-notice {
+    padding: 14px 38px 14px 18px !important;
+    border-radius: 10px !important;
     margin-bottom: 8px !important;
     max-width: 100% !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
   }
 
   .ant-notification-notice-icon {
-    font-size: 16px !important;
-    margin-top: 2px !important;
+    font-size: 14px !important;
+    width: 28px !important;
+    height: 28px !important;
   }
 
-  .ant-notification-notice-message {
+  .ant-notification-notice-title,
+  .ant-notification-notice-message,
+  .ant-notification-notice-title *,
+  .ant-notification-notice-message * {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #111111 !important;
+  }
+
+  .ant-notification-notice-description,
+  .ant-notification-notice-description * {
     font-size: 11px !important;
-    font-weight: 800 !important;
-    margin-bottom: 2px !important;
-    letter-spacing: 0.05em !important;
+    line-height: 1.4 !important;
+    color: #52525b !important;
   }
 
-  .ant-notification-notice-description {
-    font-size: 11px !important;
-    line-height: 1.35 !important;
-    color: #555555 !important;
-  }
-
-  .ant-notification-notice-close {
+  .ant-notification-notice-close,
+  .ant-notification-notice-close * {
     top: 10px !important;
     right: 10px !important;
-    font-size: 12px !important;
+    color: #9ca3af !important;
   }
 }
 
@@ -288,4 +561,159 @@ body {
 .ant-select-item-option-selected .ant-select-item-option-content,
 .ant-select-item-option-selected .anticon {
   color: #ffffff !important;
+}
+
+/* Antd Table White Card Theme Overrides for Admin Dashboard */
+.ant-table-wrapper {
+  background-color: #ffffff !important;
+  border-radius: 1rem !important;
+}
+
+.ant-table {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.ant-table-thead > tr > th {
+  background-color: #f4f4f5 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  border-bottom: 1px solid #e5e5e5 !important;
+}
+
+.ant-table-tbody > tr > td {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-bottom: 1px solid #f4f4f5 !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f9fafb !important;
+}
+
+.ant-pagination {
+  background-color: #ffffff !important;
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  border-top: 1px solid #f4f4f5 !important;
+}
+
+.ant-pagination-item {
+  background-color: #ffffff !important;
+  border-color: #e5e5e5 !important;
+}
+
+.ant-pagination-item a {
+  color: #000000 !important;
+}
+
+.ant-pagination-item-active {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+.ant-pagination-item-active a {
+  color: #ffffff !important;
+}
+
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #e5e5e5 !important;
+}
+
+/* =============================================================
+   LUXURY BRAND LOGO LOOP & CIRCULAR ROTATION ANIMATIONS
+   ============================================================= */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes marquee-infinite {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 18s linear infinite;
+  will-change: transform;
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 24s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  animation: marquee-infinite 28s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-marquee-infinite:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.animate-marquee-right {
+  display: flex;
+  width: max-content;
+  animation: marquee-right 32s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-marquee-right:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-vertical {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-marquee-vertical {
+  display: flex;
+  flex-direction: column;
+  height: max-content;
+  animation: marquee-vertical 22s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-marquee-vertical:hover {
+  animation-play-state: paused;
 }

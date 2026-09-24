@@ -22,7 +22,22 @@ const CategoryBar = ({
   totalCount = 0,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [categorySearch, setCategorySearch] = useState(searchQuery || "");
   const searchContainerRef = useRef(null);
+
+  // Sync categorySearch if searchQuery is cleared externally
+  useEffect(() => {
+    if (!searchQuery) {
+      setCategorySearch("");
+    }
+  }, [searchQuery]);
+
+  const handleCategorySearchChange = (e) => {
+    const val = e.target.value;
+    setCategorySearch(val);
+    onSearchChange(val);
+    setIsFocused(true);
+  };
 
   const options = [
     { label: "ALL PRODUCTS", value: "all" },
@@ -59,7 +74,7 @@ const CategoryBar = ({
   const discoveryProducts = products.slice(0, 3);
 
   return (
-    <div className="bg-neutral-50 border-y border-neutral-200 py-6 px-4">
+    <div className="bg-neutral-50 border-y border-neutral-200 py-6 px-4 relative z-40">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Category Pills / Segmented Buttons */}
         <div className="flex items-center space-x-2.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
@@ -87,23 +102,23 @@ const CategoryBar = ({
         {/* Right Search Input with Interactive Product Discovery Dropdown */}
         <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full md:w-auto justify-end">
           {onSearchChange && (
-            <div ref={searchContainerRef} className="relative w-full sm:w-72">
+            <div
+              ref={searchContainerRef}
+              className="relative w-full sm:w-72 z-50"
+            >
               <Input
                 placeholder="Search products in shop..."
                 prefix={<SearchOutlined className="text-neutral-400 mr-1" />}
-                value={searchQuery}
+                value={categorySearch}
                 onFocus={() => setIsFocused(true)}
-                onChange={(e) => {
-                  onSearchChange(e.target.value);
-                  setIsFocused(true);
-                }}
+                onChange={handleCategorySearchChange}
                 allowClear
                 className="rounded-full border-neutral-300 hover:border-black focus:border-black text-xs py-1.5 shadow-xs"
               />
 
               {/* SEARCH AUTOCOMPLETE & PRODUCT DISCOVER DROPDOWN PANEL */}
               {isFocused && (
-                <div className="absolute top-full right-0 mt-2 w-full sm:w-96 bg-white/98 backdrop-blur-md rounded-2xl border border-neutral-200 shadow-2xl z-50 overflow-hidden text-neutral-900 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+                <div className="absolute top-full right-0 mt-2 w-full sm:w-96 bg-white/98 backdrop-blur-md rounded-2xl border border-neutral-200 shadow-2xl z-[9999] overflow-hidden text-neutral-900 transition-all duration-300 animate-in fade-in slide-in-from-top-2">
                   {/* Category Type Quick Filters Header */}
                   <div className="bg-neutral-100/90 p-3 border-b border-neutral-200 flex items-center justify-between">
                     <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-neutral-500 flex items-center gap-1.5">

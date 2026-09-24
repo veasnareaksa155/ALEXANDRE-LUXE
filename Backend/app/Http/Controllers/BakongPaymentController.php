@@ -31,44 +31,20 @@ class BakongPaymentController extends Controller
         $merchantId = env('BAKONG_MERCHANT_ID', 'veasna_reaksa@bkrt');
         $merchantName = env('BAKONG_MERCHANT_NAME', 'REAKSA VEASNA');
         $mobileNumber = env('BAKONG_MOBILE_NUMBER', '855885232761');
+        $storeLabel = env('BAKONG_STORE_LABEL', 'Paris Atelier');
+        $terminal = env('BAKONG_TERMINAL', 'WEB-STORE');
         $billNumber = 'LX' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
-
-        $expirationTimestamp = (round(microtime(true) * 1000) + (30 * 60 * 1000));
-        $bakongToken = env('BAKONG_TOKEN', null);
 
         $qrData = null;
         $md5Hash = null;
 
-        try {
-            $individualInfo = IndividualInfo::withOptionalArray(
-                $merchantId,
-                $merchantName,
-                'PHNOM PENH',
-                [
-                    'currency' => $currency === 'KHR' ? KHQRData::CURRENCY_KHR : KHQRData::CURRENCY_USD,
-                    'amount' => (float) $amount,
-                    'mobileNumber' => $mobileNumber,
-                    'billNumber' => $billNumber,
-                ]
-            );
-
-            $res = BakongKHQR::generateIndividual($individualInfo);
-
-            if ($res && isset($res->data['qr'])) {
-                $qrData = $res->data['qr'];
-                $md5Hash = $res->data['md5'];
-            }
-        } catch (\Exception $e) {
-            Log::warning('BakongKHQR Package Error: ' . $e->getMessage());
-        }
-
-        if (empty($qrData)) {
-            $qrData = $this->buildEMVCoKHQR($merchantId, $merchantName, $amount, $billNumber, $currency);
-            $md5Hash = md5($qrData);
-        }
+        // Generate 100% NBC & EMVCo Compliant Dynamic KHQR (Guarantees USD Tag 54 is formatted with 2 decimal places e.g. 20.00 for ABA Mobile)
+        $qrData = $this->buildEMVCoKHQR($merchantId, $merchantName, $amount, $billNumber, $currency);
+        $md5Hash = md5($qrData);
 
         // Generate NBC Bakong Official Deeplink if token is available
         $deeplink = null;
+        $bakongToken = env('BAKONG_TOKEN', null);
         if (!empty($bakongToken) && !empty($qrData)) {
             try {
                 $baseUrl = rtrim(env('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh'), '/');
@@ -209,6 +185,8 @@ class BakongPaymentController extends Controller
             'order_id' => 'nullable',
         ]);
 
+        $md5 = $validated['md5'];
+
         $baseUrl = rtrim(env('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh'), '/');
         if (!str_contains($baseUrl, '/v1')) {
             $baseUrl .= '/v1';
@@ -217,10 +195,14 @@ class BakongPaymentController extends Controller
 
         if ($bakongToken) {
             try {
+                Log::info("Bakong checking payment MD5: {$md5} for Order ID: " . ($validated['order_id'] ?? 'N/A'));
+
                 $response = Http::withToken($bakongToken)
                     ->post("{$baseUrl}/check_transaction_by_md5", [
                         'md5' => $md5
                     ]);
+
+                Log::info("Bakong API Response Status: " . $response->status() . " Body: " . $response->body());
 
                 if ($response->successful()) {
                     $resData = $response->json();

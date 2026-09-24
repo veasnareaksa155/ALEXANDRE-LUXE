@@ -150,8 +150,9 @@ const WishlistDrawer = ({
                 }
               />
               <Button
+                type="primary"
                 onClick={onClose}
-                className="mt-4 bg-black text-white font-bold text-xs uppercase"
+                className="mt-4 bg-black text-white hover:!bg-neutral-800 hover:!text-white font-bold text-xs uppercase tracking-widest h-10 px-6 rounded-lg border-none shadow-sm transition-all duration-200 cursor-pointer"
               >
                 EXPLORE COLLECTIONS
               </Button>
@@ -161,35 +162,43 @@ const WishlistDrawer = ({
               const isChecked = selectedIds.includes(item.id);
 
               return (
-                <div key={item.id} className="py-4 flex gap-3 items-center">
-                  {/* Selection Checkbox */}
-                  <Checkbox
-                    checked={isChecked}
-                    onChange={(e) =>
-                      handleItemSelect(item.id, e.target.checked)
-                    }
-                  />
+                <div
+                  key={item.id}
+                  className="py-3 flex gap-3.5 items-stretch group border-b border-neutral-100/80 last:border-none"
+                >
+                  {/* Selection Checkbox (Vertically Centered with Image like Bag) */}
+                  <div className="flex items-center justify-center self-center shrink-0 my-auto">
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={(e) =>
+                        handleItemSelect(item.id, e.target.checked)
+                      }
+                      className="flex items-center justify-center m-0 p-0 [&_.ant-checkbox]:top-0"
+                    />
+                  </div>
 
-                  {/* Thumbnail */}
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-16 h-20 object-cover rounded bg-neutral-100 border border-neutral-200"
-                  />
+                  {/* Thumbnail Container */}
+                  <div className="w-20 rounded-xl bg-neutral-100 border border-neutral-200/80 overflow-hidden shrink-0 self-stretch flex items-center justify-center shadow-2xs">
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
 
                   {/* Info */}
-                  <div className="flex-1 flex flex-col justify-between h-20 py-0.5">
+                  <div className="flex-1 flex flex-col justify-between py-0.5">
                     <div>
-                      <div className="flex justify-between items-start">
-                        <h4 className="text-xs font-bold font-serif text-black uppercase line-clamp-1">
+                      <div className="flex justify-between items-center gap-1 mb-0.5">
+                        <h4 className="text-xs font-bold font-serif text-black uppercase line-clamp-1 tracking-wide m-0 leading-none">
                           {item.name}
                         </h4>
                         <button
                           onClick={() => onRemoveFromWishlist(item)}
-                          className="text-neutral-400 hover:text-red-600 transition-colors p-1"
+                          className="text-neutral-400 hover:text-red-600 transition-colors p-0.5 cursor-pointer flex items-center justify-center"
                           title="Remove from wishlist"
                         >
-                          <DeleteOutlined />
+                          <DeleteOutlined className="text-xs" />
                         </button>
                       </div>
 
@@ -209,7 +218,7 @@ const WishlistDrawer = ({
                         </div>
                       </div>
 
-                      <div className="text-xs font-extrabold text-black mt-0.5">
+                      <div className="text-xs font-extrabold text-black mt-1">
                         ${Number(item.price).toFixed(2)}
                       </div>
                     </div>
@@ -223,7 +232,7 @@ const WishlistDrawer = ({
                         onAddToCart(item);
                         onRemoveFromWishlist(item);
                       }}
-                      className="bg-black text-white hover:!bg-neutral-800 text-[10px] font-bold uppercase tracking-wider h-7 self-start"
+                      className="bg-black text-white hover:!bg-neutral-800 hover:!text-white text-[10px] font-bold uppercase tracking-wider h-7 px-3 rounded-lg border-none shadow-xs mt-2 self-start transition-all cursor-pointer"
                     >
                       ADD TO BAG
                     </Button>
@@ -240,7 +249,7 @@ const WishlistDrawer = ({
             <Button
               block
               onClick={onClose}
-              className="border-black text-black font-bold text-xs tracking-widest uppercase h-11"
+              className="border-black text-black hover:!bg-black hover:!text-white hover:!border-black font-bold text-xs tracking-widest uppercase h-11 rounded-lg transition-all cursor-pointer"
             >
               CONTINUE SHOPPING
             </Button>

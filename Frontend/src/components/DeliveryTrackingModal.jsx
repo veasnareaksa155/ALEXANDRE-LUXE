@@ -21,6 +21,7 @@ import {
   TagOutlined,
   InboxOutlined,
 } from "@ant-design/icons";
+import { getDeliveryStatus } from "../services/api";
 
 const DeliveryTrackingModal = ({
   open,
@@ -32,43 +33,49 @@ const DeliveryTrackingModal = ({
   const [driverPos, setDriverPos] = useState({ lat: 11.5584, lng: 104.9242 });
   const [etaMins, setEtaMins] = useState(18);
 
-  // Poll live delivery status & position every 4 seconds if modal is open
+  // Poll live delivery status & position every 3 seconds if modal is open
   useEffect(() => {
     if (order && open) {
       setLiveOrder(order);
       setEtaMins(order.estimated_minutes || 18);
 
-      const fetchStatus = () => {
+      const fetchStatus = async () => {
         const orderId = order.id || order.order_number;
-        fetch(`/api/orders/${orderId}/delivery`)
-          .then((res) => res.json())
-          .then((resData) => {
-            if (resData.success && resData.data) {
-              setLiveOrder(resData.data);
-              if (resData.data.driver_lat && resData.data.driver_lng) {
-                setDriverPos({
-                  lat: Number(resData.data.driver_lat),
-                  lng: Number(resData.data.driver_lng),
-                });
-              }
-              if (resData.data.estimated_minutes !== undefined) {
-                setEtaMins(resData.data.estimated_minutes);
-              }
+        if (!orderId) return;
+        try {
+          const resData = await getDeliveryStatus(orderId);
+          if (resData) {
+            setLiveOrder(resData);
+            if (resData.driver_lat && resData.driver_lng) {
+              setDriverPos({
+                lat: Number(resData.driver_lat),
+                lng: Number(resData.driver_lng),
+              });
             }
-          })
-          .catch((err) => console.warn("Failed to poll delivery status:", err));
+            if (resData.estimated_minutes !== undefined) {
+              setEtaMins(resData.estimated_minutes);
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to poll delivery status:", err);
+        }
       };
 
       fetchStatus();
-      const interval = setInterval(fetchStatus, 4000);
+      const interval = setInterval(fetchStatus, 3000);
       return () => clearInterval(interval);
     }
   }, [order, open]);
 
   if (!order) return null;
 
-  const currentStatus =
-    liveOrder?.delivery_status || liveOrder?.status || "processing";
+  const currentStatus = String(
+    liveOrder?.delivery_status ||
+      liveOrder?.status ||
+      order?.delivery_status ||
+      order?.status ||
+      "processing",
+  ).toLowerCase();
 
   // Determine active step index for step progress bar
   let currentStep = 1;
@@ -80,7 +87,11 @@ const DeliveryTrackingModal = ({
     currentStatus === "out_for_delivery"
   )
     currentStep = 2;
-  else if (currentStatus === "delivered" || currentStatus === "completed")
+  else if (
+    currentStatus === "delivered" ||
+    currentStatus === "completed" ||
+    currentStatus === "arrived"
+  )
     currentStep = 3;
 
   // Courier details
@@ -180,17 +191,67 @@ const DeliveryTrackingModal = ({
             </div>
 
             {/* ETA Countdown Badge */}
-            <div className="bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-lg border border-white/20 text-right shrink-0">
+            <div
+              className={`px-3.5 py-2 rounded-lg border text-right shrink-0 ${
+                currentStep === 3
+                  ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                  : "bg-white/10 border-white/20"
+              }`}
+            >
               <span className="text-[10px] text-neutral-400 font-mono uppercase block">
-                ESTIMATED ARRIVAL
+                {currentStep === 3 ? "DELIVERY STATUS" : "ESTIMATED ARRIVAL"}
               </span>
-              <span className="text-sm sm:text-base font-extrabold font-mono text-amber-400 flex items-center gap-1">
-                <ClockCircleOutlined />
-                {currentStep === 3 ? "DELIVERED ✅" : `${etaMins} MINS`}
+              <span
+                className={`text-sm sm:text-base font-extrabold font-mono flex items-center gap-1.5 justify-end ${
+                  currentStep === 3 ? "text-emerald-400" : "text-amber-400"
+                }`}
+              >
+                {currentStep === 3 ? (
+                  <>
+                    <CheckCircleOutlined className="text-emerald-400" /> ARRIVED
+                    AT LOCATION
+                  </>
+                ) : (
+                  <>
+                    <ClockCircleOutlined /> {etaMins} MINS
+                  </>
+                )}
               </span>
             </div>
           </div>
         </div>
+
+        {/* Arrived Banner Alert Callout when currentStep === 3 */}
+        {currentStep === 3 && (
+          <div className="bg-emerald-50 border-2 border-emerald-500/60 p-4 rounded-xl flex items-center justify-between gap-3 shadow-sm animate-fade-in">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+                <CheckCircleOutlined />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-bold font-serif text-emerald-950 uppercase tracking-wider m-0 flex items-center gap-1.5">
+                  <span>ARRIVED AT YOUR LOCATION</span>
+                  <span className="bg-emerald-200 text-emerald-900 text-[9px] font-mono font-black px-2 py-0.5 rounded-full">
+                    DELIVERED
+                  </span>
+                </h4>
+                <p className="text-[11px] text-emerald-800 m-0 mt-0.5 font-light truncate">
+                  Courier has arrived & handed over your package to{" "}
+                  <strong className="font-semibold text-emerald-950">
+                    {liveOrder.shipping_address || "your destination address"}
+                  </strong>
+                  .
+                </p>
+              </div>
+            </div>
+            <Tag
+              color="emerald"
+              className="bg-emerald-600 text-white font-mono font-bold uppercase tracking-wider text-[10px] px-2.5 py-1 rounded-md border-none shrink-0"
+            >
+              ARRIVED ✅
+            </Tag>
+          </div>
+        )}
 
         {/* 4-Step Progress Bar */}
         <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
@@ -212,7 +273,7 @@ const DeliveryTrackingModal = ({
               },
               {
                 title: "DELIVERED",
-                description: "Handed over",
+                description: "Arrived at Location",
               },
             ]}
           />
@@ -253,12 +314,30 @@ const DeliveryTrackingModal = ({
             <path
               d="M 50 160 C 150 140, 250 80, 400 120 C 550 160, 620 90, 700 80"
               fill="none"
-              stroke="#fbbf24"
+              stroke={currentStep === 3 ? "#10b981" : "#fbbf24"}
               strokeWidth="5"
-              strokeDasharray="8 6"
+              strokeDasharray={currentStep === 3 ? "none" : "8 6"}
               strokeLinecap="round"
             />
           </svg>
+
+          {/* Arrived Overlay Badge on Map if delivered */}
+          {currentStep === 3 && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-emerald-950/90 text-white backdrop-blur-md px-4 py-2 rounded-xl border border-emerald-500/50 shadow-xl flex items-center gap-2.5 max-w-[90%]">
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-black flex items-center justify-center font-black text-xs shrink-0">
+                ✓
+              </div>
+              <div className="min-w-0">
+                <h5 className="text-xs font-bold text-emerald-300 font-serif uppercase tracking-wider m-0">
+                  ARRIVED AT DESTINATION
+                </h5>
+                <p className="text-[10px] text-neutral-300 font-mono m-0 truncate">
+                  Package delivered to{" "}
+                  {liveOrder.shipping_address || "Customer Location"}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Point 1: Store / Maison Location (Left) */}
           <div className="absolute top-[65%] left-[10%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
@@ -270,7 +349,7 @@ const DeliveryTrackingModal = ({
             </span>
           </div>
 
-          {/* Point 2: Moving Courier Delivery Truck Icon (Center-Moving) */}
+          {/* Point 2: Moving Courier Delivery Truck Icon (Center-Moving / Parked at destination) */}
           <div
             className={`absolute top-[48%] transition-all duration-1000 ease-out -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-20 ${
               currentStep === 3
@@ -281,33 +360,65 @@ const DeliveryTrackingModal = ({
             }`}
           >
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-amber-400 text-black flex items-center justify-center shadow-xl border-2 border-black animate-bounce">
-                <CarOutlined className="text-base font-bold" />
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xl border-2 ${
+                  currentStep === 3
+                    ? "bg-emerald-500 text-white border-white scale-110"
+                    : "bg-amber-400 text-black border-black animate-bounce"
+                }`}
+              >
+                {currentStep === 3 ? (
+                  <CheckCircleOutlined className="text-xl font-bold" />
+                ) : (
+                  <CarOutlined className="text-base font-bold" />
+                )}
               </div>
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-              </span>
+              {currentStep !== 3 && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                </span>
+              )}
             </div>
-            <span className="bg-amber-500 text-black text-[9px] font-mono font-black px-2 py-0.5 rounded mt-1 shadow uppercase tracking-wider">
-              🚚 COURIER LIVE
+            <span
+              className={`text-[9px] font-mono font-black px-2 py-0.5 rounded mt-1 shadow uppercase tracking-wider ${
+                currentStep === 3
+                  ? "bg-emerald-700 text-white border border-emerald-400"
+                  : "bg-amber-500 text-black"
+              }`}
+            >
+              {currentStep === 3 ? "✅ ARRIVED AT LOCATION" : "🚚 COURIER LIVE"}
             </span>
           </div>
 
           {/* Point 3: Customer Delivery Destination (Right) */}
           <div className="absolute top-[35%] left-[85%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
-            <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg border-2 border-white">
+            <div
+              className={`w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg border-2 border-white ${
+                currentStep === 3
+                  ? "bg-emerald-600 ring-4 ring-emerald-400/40"
+                  : "bg-red-600"
+              }`}
+            >
               <EnvironmentOutlined className="text-xs" />
             </div>
-            <span className="bg-red-600 text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded mt-1 shadow uppercase tracking-wider">
-              YOUR LOCATION
+            <span
+              className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded mt-1 shadow uppercase tracking-wider ${
+                currentStep === 3
+                  ? "bg-emerald-700 text-white"
+                  : "bg-red-600 text-white"
+              }`}
+            >
+              {currentStep === 3 ? "ARRIVED LOCATION" : "YOUR LOCATION"}
             </span>
           </div>
 
           {/* Bottom Live Map Badge */}
           <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
             <span className="bg-black/80 backdrop-blur-md text-white text-[9px] font-mono px-2 py-1 rounded border border-white/20">
-              📍 Phnom Penh Delivery Zone • Live GPS Signal Active
+              {currentStep === 3
+                ? "📍 Package Arrived • Location Destination Verified"
+                : "📍 Phnom Penh Delivery Zone • Live GPS Satellite Active"}
             </span>
             {onNavigateDriverApp && (
               <button

@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Button, Tabs, Checkbox, notification } from "antd";
+import { Modal, Form, Input, Button, Checkbox, notification } from "antd";
 import {
-  UserOutlined,
-  CrownOutlined,
   LockOutlined,
   MailOutlined,
   ArrowRightOutlined,
@@ -14,12 +12,10 @@ import { createUser, loginUser } from "../services/api";
 const AuthModal = ({ open, onClose, onLoginSuccess }) => {
   // Mode State: 'login' | 'register'
   const [mode, setMode] = useState("login");
-  // Login Role Tab: 'user' | 'admin'
-  const [activeTab, setActiveTab] = useState("user");
   const [loading, setLoading] = useState(false);
 
   // Form submit handler for Login
-  const handleLogin = async (values, role) => {
+  const handleLogin = async (values) => {
     setLoading(true);
     try {
       const res = await loginUser({
@@ -57,7 +53,7 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
             : "VIP CLIENT LOGGED IN",
         description:
           sessionRole === "admin"
-            ? "Welcome to Alexandre Luxe Admin Management Panel."
+            ? "Welcome to LEGACY Admin Management Panel."
             : `Welcome back to your VIP account, ${userData.name}!`,
         placement: "bottomRight",
         duration: 2.5,
@@ -68,34 +64,23 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
       }
       onClose();
     } catch (error) {
-      console.warn("Login API failed, creating instant user profile:", error);
-      const sessionRole = values.email?.toLowerCase().includes("admin")
-        ? "admin"
-        : role || activeTab;
+      console.error("Login failed:", error);
+      const errorMsg =
+        error.response?.data?.message ||
+        "Account not found or invalid credentials. Please register a new account first before logging in.";
 
-      const userData = {
-        id: Date.now(),
-        role: sessionRole,
-        name: values.email
-          ? values.email.split("@")[0].replace(".", " ").toUpperCase()
-          : "VIP CLIENT",
-        email: values.email || "user@alexandreluxe.com",
-        tier: "BLACK DIAMOND VIP",
-        memberSince: "2026",
-        phone: "",
-        address: "",
-      };
-
-      if (onLoginSuccess) {
-        onLoginSuccess(userData);
-      }
-      onClose();
+      notification.error({
+        message: "LOGIN FAILED",
+        description: errorMsg,
+        placement: "bottomRight",
+        duration: 4,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Form submit handler for Register (Calls backend API createUser to save to Supabase)
+  // Form submit handler for Register
   const handleRegister = async (values) => {
     setLoading(true);
     try {
@@ -127,7 +112,7 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
 
       notification.success({
         message: "ACCOUNT CREATED SUCCESSFULLY",
-        description: `Welcome to Alexandre Luxe VIP Membership, ${userData.name}! Your unique profile is now active.`,
+        description: `Welcome to LEGACY VIP Membership, ${userData.name}! Your unique profile is now active.`,
         placement: "bottomRight",
         duration: 3,
       });
@@ -161,37 +146,37 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
       open={open}
       onCancel={onClose}
       footer={null}
-      width={840}
+      width={780}
       centered
       destroyOnClose
       className="luxury-auth-modal"
       bodyStyle={{ padding: 0, borderRadius: "1.25rem", overflow: "hidden" }}
     >
-      <div className="relative w-full min-h-[580px] h-[580px] bg-white rounded-2xl overflow-hidden shadow-2xl select-none">
-        {/* ================= PANEL 1: LOGIN FORM (Positioned Left 50%) ================= */}
+      <div className="relative w-full min-h-[460px] md:h-[580px] bg-white rounded-2xl overflow-hidden shadow-2xl select-none">
+        {/* ================= PANEL 1: LOGIN FORM ================= */}
         <div
-          className={`absolute top-0 left-0 w-1/2 h-full p-6 sm:p-8 flex flex-col justify-between transition-all duration-700 ease-in-out ${
+          className={`w-full md:w-1/2 md:absolute md:top-0 md:left-0 h-full p-6 sm:p-8 flex flex-col justify-between transition-all duration-500 ease-in-out ${
             mode === "login"
-              ? "opacity-100 translate-x-0 z-10 pointer-events-auto"
-              : "opacity-0 -translate-x-12 z-0 pointer-events-none"
+              ? "block opacity-100 md:translate-x-0 z-10 pointer-events-auto"
+              : "hidden md:flex opacity-0 md:-translate-x-12 z-0 pointer-events-none"
           }`}
         >
           <div>
             <div className="flex items-center space-x-2 mb-3">
               <img
                 src="/images/LOGO.png"
-                alt="Alexandre Luxe"
+                alt="LEGACY"
                 className="h-7 w-auto object-contain"
               />
               <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest font-mono">
-                ALEXANDRE LUXE
+                LEGACY STORE
               </span>
             </div>
 
-            <h2 className="text-2xl font-black font-serif uppercase tracking-tight text-black mb-1">
+            <h2 className="text-xl sm:text-2xl font-black font-serif uppercase tracking-tight text-black mb-1">
               SIGN IN TO ACCOUNT
             </h2>
-            <p className="text-xs text-neutral-500 font-light mb-6">
+            <p className="text-xs text-neutral-500 font-light mb-5">
               Access your personal purchases, order tracking, and saved
               wishlist.
             </p>
@@ -200,7 +185,7 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
             <Form
               layout="vertical"
               initialValues={{
-                email: "user@alexandreluxe.com",
+                email: "client@legacystore.com",
                 password: "password123",
               }}
               onFinish={(vals) => handleLogin(vals, "user")}
@@ -217,7 +202,7 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
               >
                 <Input
                   prefix={<MailOutlined className="text-neutral-400" />}
-                  placeholder="user@alexandreluxe.com"
+                  placeholder="client@legacystore.com"
                   className="text-xs py-2 rounded-md"
                 />
               </Form.Item>
@@ -244,36 +229,50 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
                 htmlType="submit"
                 loading={loading}
                 block
-                className="bg-black hover:bg-neutral-800 text-white font-extrabold text-xs uppercase tracking-widest h-11 rounded-md shadow-md flex items-center justify-center gap-2 mt-2"
+                className="bg-black hover:bg-neutral-800 text-white font-extrabold text-xs uppercase tracking-widest h-11 rounded-md shadow-md flex items-center justify-center gap-2 mt-2 cursor-pointer"
               >
                 <span>ENTER CLIENT PORTAL</span>
                 <ArrowRightOutlined />
               </Button>
             </Form>
           </div>
+
+          {/* Mobile Switch Link */}
+          <div className="md:hidden mt-4 pt-3 border-t border-neutral-100 text-center">
+            <p className="text-xs text-neutral-500">
+              New to LEGACY?{" "}
+              <button
+                type="button"
+                onClick={() => setMode("register")}
+                className="text-black font-extrabold underline cursor-pointer ml-1"
+              >
+                Create VIP Account
+              </button>
+            </p>
+          </div>
         </div>
 
-        {/* ================= PANEL 2: REGISTER FORM (Positioned Right 50%) ================= */}
+        {/* ================= PANEL 2: REGISTER FORM ================= */}
         <div
-          className={`absolute top-0 right-0 w-1/2 h-full p-6 sm:p-8 flex flex-col justify-between transition-all duration-700 ease-in-out ${
+          className={`w-full md:w-1/2 md:absolute md:top-0 md:right-0 h-full p-6 sm:p-8 flex flex-col justify-between transition-all duration-500 ease-in-out ${
             mode === "register"
-              ? "opacity-100 translate-x-0 z-10 pointer-events-auto"
-              : "opacity-0 translate-x-12 z-0 pointer-events-none"
+              ? "block opacity-100 md:translate-x-0 z-10 pointer-events-auto"
+              : "hidden md:flex opacity-0 md:translate-x-12 z-0 pointer-events-none"
           }`}
         >
           <div>
             <div className="flex items-center space-x-2 mb-3">
               <img
                 src="/images/LOGO.png"
-                alt="Alexandre Luxe"
+                alt="LEGACY"
                 className="h-7 w-auto object-contain"
               />
               <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest font-mono">
-                ALEXANDRE LUXE VIP
+                LEGACY VIP
               </span>
             </div>
 
-            <h2 className="text-2xl font-black font-serif uppercase tracking-tight text-black mb-1">
+            <h2 className="text-xl sm:text-2xl font-black font-serif uppercase tracking-tight text-black mb-1">
               CREATE VIP ACCOUNT
             </h2>
             <p className="text-xs text-neutral-500 font-light mb-4">
@@ -301,7 +300,7 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
               >
                 <Input
                   prefix={<IdcardOutlined className="text-neutral-400" />}
-                  placeholder="e.g. Alexandre De-Luxe"
+                  placeholder="e.g. Jean Dupont"
                   className="text-xs py-2 rounded-md"
                 />
               </Form.Item>
@@ -342,7 +341,7 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
                 />
               </Form.Item>
 
-              <Form.Item name="agree" valuePropName="checked" className="!mb-4">
+              <Form.Item name="agree" valuePropName="checked" className="!mb-3">
                 <Checkbox className="text-[10px] text-neutral-500 leading-tight">
                   I agree to receive VIP invitations & express shipping
                   benefits.
@@ -354,18 +353,32 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
                 htmlType="submit"
                 loading={loading}
                 block
-                className="bg-black hover:bg-neutral-800 text-white font-extrabold text-xs uppercase tracking-widest h-11 rounded-md shadow-md flex items-center justify-center gap-2 mt-2"
+                className="bg-black hover:bg-neutral-800 text-white font-extrabold text-xs uppercase tracking-widest h-11 rounded-md shadow-md flex items-center justify-center gap-2 mt-1 cursor-pointer"
               >
                 <UserAddOutlined />
                 <span>JOIN VIP MEMBERSHIP</span>
               </Button>
             </Form>
           </div>
+
+          {/* Mobile Switch Link */}
+          <div className="md:hidden mt-4 pt-3 border-t border-neutral-100 text-center">
+            <p className="text-xs text-neutral-500">
+              Already a VIP Member?{" "}
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="text-black font-extrabold underline cursor-pointer ml-1"
+              >
+                Sign In
+              </button>
+            </p>
+          </div>
         </div>
 
-        {/* ================= PARALLAX DOUBLE SLIDER OVERLAY CONTAINER (50% WIDTH) ================= */}
+        {/* ================= DESKTOP PARALLAX DOUBLE SLIDER OVERLAY CONTAINER ================= */}
         <div
-          className={`absolute top-0 left-0 w-1/2 h-full overflow-hidden z-30 transition-transform duration-700 ease-in-out rounded-2xl shadow-2xl border-x border-neutral-800 ${
+          className={`hidden md:block absolute top-0 left-0 w-1/2 h-full overflow-hidden z-30 transition-transform duration-700 ease-in-out rounded-2xl shadow-2xl border-x border-neutral-800 ${
             mode === "login" ? "translate-x-full" : "translate-x-0"
           }`}
         >
@@ -375,23 +388,23 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
               mode === "login" ? "translate-x-0" : "-translate-x-1/2"
             }`}
           >
-            {/* Banner Side 1: Visible when Mode is LOGIN (Overlay sits on RIGHT) */}
+            {/* Banner Side 1: Visible when Mode is LOGIN */}
             <div
               onClick={() => setMode("register")}
               className="w-1/2 h-full p-8 sm:p-10 flex flex-col justify-between items-center text-center cursor-pointer group"
             >
               <div className="flex flex-col items-center pt-4">
-                <div className="w-12 h-12 rounded-full border border-neutral-700 bg-neutral-900 text-yellow-400 flex items-center justify-center font-serif font-black text-xl mb-3 shadow-inner group-hover:scale-110 transition-transform">
-                  AL
+                <div className="w-12 h-12 rounded-full border border-neutral-700 bg-neutral-900 text-amber-400 flex items-center justify-center font-serif font-black text-xl mb-3 shadow-inner group-hover:scale-110 transition-transform">
+                  LG
                 </div>
-                <span className="text-[10px] font-bold font-mono tracking-widest text-yellow-400 uppercase">
+                <span className="text-[10px] font-bold font-mono tracking-widest text-amber-400 uppercase">
                   EXPRESS LUXURY ACCESS
                 </span>
               </div>
 
               <div className="space-y-4 my-auto px-2">
                 <h3 className="text-2xl font-black font-serif uppercase tracking-tight text-white">
-                  NEW TO ALEXANDRE LUXE?
+                  NEW TO LEGACY?
                 </h3>
                 <p className="text-xs text-neutral-300 font-light leading-relaxed max-w-xs mx-auto">
                   Create an exclusive account to track luxury shipments, save
@@ -417,16 +430,16 @@ const AuthModal = ({ open, onClose, onLoginSuccess }) => {
               </div>
             </div>
 
-            {/* Banner Side 2: Visible when Mode is REGISTER (Overlay sits on LEFT) */}
+            {/* Banner Side 2: Visible when Mode is REGISTER */}
             <div
               onClick={() => setMode("login")}
               className="w-1/2 h-full p-8 sm:p-10 flex flex-col justify-between items-center text-center cursor-pointer group"
             >
               <div className="flex flex-col items-center pt-4">
-                <div className="w-12 h-12 rounded-full border border-neutral-700 bg-neutral-900 text-yellow-400 flex items-center justify-center font-serif font-black text-xl mb-3 shadow-inner group-hover:scale-110 transition-transform">
-                  AL
+                <div className="w-12 h-12 rounded-full border border-neutral-700 bg-neutral-900 text-amber-400 flex items-center justify-center font-serif font-black text-xl mb-3 shadow-inner group-hover:scale-110 transition-transform">
+                  LG
                 </div>
-                <span className="text-[10px] font-bold font-mono tracking-widest text-yellow-400 uppercase">
+                <span className="text-[10px] font-bold font-mono tracking-widest text-amber-400 uppercase">
                   HAUTE COUTURE • PARIS
                 </span>
               </div>

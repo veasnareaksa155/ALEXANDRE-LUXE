@@ -10,7 +10,7 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Resilient native fetch helper (bypasses buggy browser extension XHR monkey-patches)
@@ -132,29 +132,57 @@ export const fetchProductById = async (id) => {
   }
 };
 
+export const clearProductCache = () => {
+  try {
+    localStorage.removeItem("lx_cached_products");
+  } catch (e) {}
+};
+
+export const clearCategoryCache = () => {
+  try {
+    localStorage.removeItem("lx_cached_categories");
+  } catch (e) {}
+};
+
 export const createProduct = async (productData) => {
   try {
-    const response = await api.post("/products", productData);
-    return response.data;
+    const result = await requestFetch("/products", {
+      method: "POST",
+      body: JSON.stringify(productData),
+    });
+    clearProductCache();
+    return result;
   } catch (error) {
-    console.error("Error creating product:", error);
-    throw error;
+    console.warn("createProduct fetch failed, falling back to axios:", error);
+    const response = await api.post("/products", productData);
+    clearProductCache();
+    return response.data;
   }
 };
 
 export const updateProduct = async (id, productData) => {
   try {
-    const response = await api.put(`/products/${id}`, productData);
-    return response.data;
+    const result = await requestFetch(`/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(productData),
+    });
+    clearProductCache();
+    return result;
   } catch (error) {
-    console.error(`Error updating product #${id}:`, error);
-    throw error;
+    console.warn(
+      `updateProduct #${id} fetch failed, falling back to axios:`,
+      error,
+    );
+    const response = await api.put(`/products/${id}`, productData);
+    clearProductCache();
+    return response.data;
   }
 };
 
 export const deleteProduct = async (id) => {
   try {
     const response = await api.delete(`/products/${id}`);
+    clearProductCache();
     return response.data;
   } catch (error) {
     console.error(`Error deleting product #${id}:`, error);
@@ -177,28 +205,37 @@ export const fetchOrders = async (userEmail = null) => {
     const url = userEmail
       ? `/orders?email=${encodeURIComponent(userEmail)}`
       : "/orders";
-    const response = await api.get(url);
-    if (response.data && response.data.data) {
+    const data = await requestFetch(url);
+    if (data && data.data) {
       if (userEmail) {
         try {
           localStorage.setItem(
             `lx_cached_orders_${userEmail}`,
-            JSON.stringify(response.data.data),
+            JSON.stringify(data.data),
           );
         } catch (e) {}
       }
-      return response.data.data;
+      return data.data;
     }
   } catch (error) {
-    console.error("Error fetching orders:", error);
+    console.warn("fetchOrders via fetch failed, trying axios fallback:", error);
+    try {
+      const url = userEmail
+        ? `/orders?email=${encodeURIComponent(userEmail)}`
+        : "/orders";
+      const response = await api.get(url);
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+    } catch (e) {}
     if (userEmail) {
       try {
         const cached = localStorage.getItem(`lx_cached_orders_${userEmail}`);
         if (cached) return JSON.parse(cached);
       } catch (e) {}
     }
-    throw error;
   }
+  return [];
 };
 
 export const updateOrderStatus = async (id, status) => {
@@ -209,6 +246,19 @@ export const updateOrderStatus = async (id, status) => {
     console.error(`Error updating order #${id} status:`, error);
     throw error;
   }
+};
+
+export const getDeliveryStatus = async (orderId) => {
+  try {
+    const data = await requestFetch(`/orders/${orderId}/delivery`);
+    if (data && data.data) return data.data;
+  } catch (error) {
+    try {
+      const response = await api.get(`/orders/${orderId}/delivery`);
+      if (response.data && response.data.data) return response.data.data;
+    } catch (e) {}
+  }
+  return null;
 };
 
 export const deleteOrder = async (id) => {
@@ -234,12 +284,20 @@ export const loginUser = async (credentials) => {
 
 export const fetchUsers = async () => {
   try {
-    const response = await api.get("/users");
-    return response.data.data;
+    const data = await requestFetch("/users");
+    if (data && data.data) {
+      return data.data;
+    }
   } catch (error) {
-    console.error("Error fetching users:", error);
-    throw error;
+    console.warn("fetchUsers via fetch failed, trying axios fallback:", error);
+    try {
+      const response = await api.get("/users");
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+    } catch (e) {}
   }
+  return [];
 };
 
 export const createUser = async (userData) => {

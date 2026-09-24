@@ -36,6 +36,18 @@ export const luxuryTheme = {
     Badge: {
       colorPrimary: "#000000",
     },
+    Notification: {
+      colorBgElevated: "#ffffff",
+      colorText: "#4b5563",
+      colorTextHeading: "#111111",
+      colorIcon: "#10b981",
+      colorIconHover: "#111111",
+      borderRadiusLG: 10,
+    },
+    Message: {
+      colorBgElevated: "#ffffff",
+      colorText: "#111111",
+    },
     Tabs: {
       itemColor: "#666666",
       itemSelectedColor: "#000000",
@@ -80,11 +92,13 @@ export const adminDarkTheme = {
       colorBorderSecondary: "#262626",
     },
     Table: {
-      colorBgContainer: "#121212",
-      headerBg: "#1c1c1c",
-      headerColor: "#ffffff",
-      rowHoverBg: "#1f1f1f",
-      borderColor: "#262626",
+      colorBgContainer: "#ffffff",
+      headerBg: "#f4f4f5",
+      headerColor: "#000000",
+      rowHoverBg: "#f9fafb",
+      borderColor: "#e5e5e5",
+      colorText: "#000000",
+      colorTextHeading: "#000000",
     },
     Modal: {
       colorBgContainer: "#121212",
